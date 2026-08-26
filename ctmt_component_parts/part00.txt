@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>cTMT Cognitive Recon Mission</title>
+<title>cTMT Cognitive Aim Trainer</title>
 <style>
   :root{
     --bg:#07111f; --panel:#0d1b2a; --panel2:#102536; --text:#ecf7ff; --muted:#91a9ba;
-    --line:#244154; --accent:#1fd7c5; --accent2:#73ffd2; --danger:#ff7b72; --stage:#f7fbfd;
+    --line:#244154; --accent:#19e3d1; --accent2:#78ffe6; --danger:#ff7b72;
   }
   *{box-sizing:border-box}
   html,body{width:100%;max-width:100%;overflow-x:hidden}
@@ -33,28 +33,69 @@
   .hud-title{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:7px}
   #trialLabel{font-weight:900;letter-spacing:.035em;color:#f5fbff}
   #status{font-weight:900;letter-spacing:.07em;text-transform:uppercase}
+
+  /* Fixed camera FPS training range.  The cTMT target coordinates remain unchanged. */
   #stage{
     position:relative;width:100%;aspect-ratio:10/7;min-height:480px;
-    background:linear-gradient(rgba(21,84,105,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(21,84,105,.035) 1px,transparent 1px),var(--stage);
-    background-size:26px 26px;border:1px solid #3f6374;border-radius:10px;
-    overflow:hidden;touch-action:none;user-select:none;cursor:crosshair;box-shadow:inset 0 0 0 1px rgba(31,215,197,.08)
+    background:
+      radial-gradient(circle at 50% 18%,rgba(171,210,224,.16),transparent 34%),
+      linear-gradient(180deg,#182531 0%,#243643 49%,#394a56 50%,#66747c 100%);
+    border:1px solid #3f6374;border-radius:10px;
+    overflow:hidden;touch-action:none;user-select:none;cursor:none;
+    box-shadow:inset 0 0 52px rgba(0,0,0,.38),inset 0 0 0 1px rgba(31,215,197,.06)
   }
-  #stage:before{content:"TRACKING FIELD";position:absolute;left:10px;top:8px;font-size:8px;font-weight:900;letter-spacing:.14em;color:#73909f;z-index:0;pointer-events:none}
+  #stage:before{
+    content:"";position:absolute;left:-18%;right:-18%;bottom:-13%;height:58%;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(190,212,220,.18) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(190,212,220,.18) 1px,transparent 1px);
+    background-size:44px 34px;
+    transform:perspective(340px) rotateX(58deg);transform-origin:bottom center;
+    border-top:2px solid rgba(202,224,231,.18)
+  }
+  #stage:after{
+    content:"COGNITIVE AIM RANGE  //  SECTOR 07";position:absolute;left:12px;top:9px;z-index:1;pointer-events:none;
+    color:rgba(222,242,248,.48);font-size:8px;font-weight:900;letter-spacing:.16em;text-shadow:0 1px 2px #07111f
+  }
+
+  /* Same 44px visible target footprint; styled as an FPS aim-training orb. */
   .target{
     position:absolute;width:44px;height:44px;border-radius:50%;transform:translate(-50%,-50%);
-    display:flex;align-items:center;justify-content:center;background:white;border:3px solid #111827;
-    color:#111827;font-size:15px;font-weight:800;z-index:3;pointer-events:none;
+    display:flex;align-items:center;justify-content:center;
+    background:
+      radial-gradient(circle at 34% 26%,#c7fff8 0 7%,#4ff5e5 9%,#0fc9c7 39%,#087d91 68%,#06455c 100%);
+    border:1px solid rgba(191,255,247,.72);
+    color:#032b35;font-size:15px;font-weight:950;z-index:3;pointer-events:none;
+    text-shadow:0 1px 0 rgba(255,255,255,.58);
+    box-shadow:0 8px 14px rgba(0,0,0,.34),0 0 0 3px rgba(25,227,209,.08),0 0 18px rgba(25,227,209,.2);
+    transition:filter .13s ease,box-shadow .13s ease,opacity .13s ease,transform .13s ease
   }
-  .target.hit{border-color:#0f9f91;background:#e7fff8;color:#065f56;box-shadow:0 0 0 4px rgba(31,215,197,.12)}
+  .target:before{
+    content:"";position:absolute;left:8px;top:6px;width:12px;height:8px;border-radius:50%;
+    background:rgba(255,255,255,.34);filter:blur(.6px);transform:rotate(-22deg)
+  }
+  .target.hit{
+    color:#dffff9;filter:saturate(.45);opacity:.48;
+    border-color:rgba(120,255,230,.75);
+    box-shadow:0 0 0 3px rgba(120,255,230,.17),0 0 24px rgba(120,255,230,.35);
+    transform:translate(-50%,-50%) scale(.88)
+  }
+
   .fixation{
     position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-    width:76px;height:76px;border-radius:50%;background:#0c2431;border:2px solid var(--accent);
+    width:76px;height:76px;border-radius:50%;background:rgba(5,24,34,.86);border:2px solid var(--accent);
     color:var(--accent2);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:400;z-index:5;
-    cursor:pointer;box-shadow:0 0 0 8px rgba(31,215,197,.08),0 0 24px rgba(31,215,197,.22);
+    cursor:pointer;box-shadow:0 0 0 8px rgba(31,215,197,.08),0 0 24px rgba(31,215,197,.28)
   }
-  .fixation:after{content:"INITIALIZE";position:absolute;top:86px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:900;letter-spacing:.14em;color:#276274;white-space:nowrap}
+  .fixation:after{content:"INITIALIZE AIM";position:absolute;top:86px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:900;letter-spacing:.14em;color:#9edbd4;white-space:nowrap;text-shadow:0 1px 2px #07111f}
   svg.trace{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
-  .crosshair{position:absolute;width:7px;height:7px;border-radius:50%;background:#087f72;opacity:.8;transform:translate(-50%,-50%);z-index:2;pointer-events:none}
+
+  /* Pointer is rendered as an FPS reticle, not a standard cursor. */
+  .crosshair{position:absolute;width:24px;height:24px;transform:translate(-50%,-50%);z-index:4;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
+  .crosshair:before,.crosshair:after{content:"";position:absolute;background:#76ffe6;border-radius:1px;box-shadow:0 0 5px rgba(118,255,230,.7)}
+  .crosshair:before{width:2px;height:24px;left:11px;top:0}
+  .crosshair:after{height:2px;width:24px;left:0;top:11px}
+
   .stats{display:grid;gap:9px;min-width:0}
   .stat{padding:11px;border:1px solid #244154;border-radius:10px;min-width:0;background:#0a1724}
   .stat b{display:block;font-size:21px;margin-top:3px;color:#f7fcff}
@@ -77,16 +118,16 @@
 <div class="wrap">
   <div class="top">
     <div>
-      <div class="kicker">Cognitive Recon // Mission Control</div>
-      <h1>cTMT TRACKING MISSION</h1>
+      <div class="kicker">Cognitive Aim // Mission Control</div>
+      <h1>cTMT AIM TRAINING MISSION</h1>
       <div class="small">Protocol locked · Training A/B + 20 alternating trials · 25 s per trial</div>
     </div>
-    <div class="pill">● TRACKING ONLINE</div>
+    <div class="pill">● AIM TRACKING ONLINE</div>
   </div>
 
   <div class="operator">
     <div class="operator-avatar">🧑‍🚀</div>
-    <div><div class="operator-name">Mission Operator // Echo</div><div class="operator-msg">중앙 ⊕로 tracking을 초기화한 뒤 목표를 자연스럽게 따라가세요. 사격·WASD·시점 조작은 없습니다.</div></div>
+    <div><div class="operator-name">Mission Operator // Echo</div><div class="operator-msg">중앙 조준점을 초기화한 뒤 숫자·문자가 적힌 Orb를 순서대로 에임으로 통과하세요. 클릭이나 사격은 필요하지 않습니다.</div></div>
   </div>
 
   <div class="panel controls">
@@ -107,7 +148,7 @@
         <div id="status" class="small">READY</div>
       </div>
       <div class="progress"><div id="progressBar"></div></div>
-      <div id="stage" aria-label="cTMT test area" tabindex="0"></div>
+      <div id="stage" aria-label="cTMT aim training area" tabindex="0"></div>
     </div>
 
     <div class="panel">
@@ -116,10 +157,10 @@
         <div class="stat"><span class="small">NEXT OBJECTIVE</span><b id="nextTarget">-</b></div>
         <div class="stat"><span class="small">TARGETS SECURED</span><b id="correctCount">0 / 15</b></div>
         <div class="stat"><span class="small">TIME REMAINING</span><b id="remaining">25.00 s</b></div>
-        <div class="stat"><span class="small">TRACKING EVENTS</span><b id="eventCount">0</b></div>
+        <div class="stat"><span class="small">AIM EVENTS</span><b id="eventCount">0</b></div>
       </div>
       <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
-      <div class="note">중앙 <b>⊕</b>를 클릭하면 trial이 시작됩니다. 이후 클릭하지 말고 마우스 커서를 순서대로 원 안에 통과시키세요. 15개를 모두 연결하거나 25초가 지나면 종료됩니다.</div>
+      <div class="note">중앙 <b>⊕</b>를 클릭하면 trial이 시작됩니다. 이후 클릭하지 말고 조준점을 순서대로 Orb 안에 통과시키세요. 모든 Orb는 같은 중요도로 표시되며 다음 목표 위치를 따로 알려주지 않습니다.</div>
       <div id="summaryBox" class="hidden">
         <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
         <b style="color:var(--accent2)">ALL MISSIONS COMPLETE</b>
