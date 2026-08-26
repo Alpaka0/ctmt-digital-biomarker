@@ -42,6 +42,10 @@ st.markdown("""
 .score .label{font-size:14px;font-weight:800;color:#475467}
 .score .number{font-size:52px;font-weight:950;color:#1d4ed8;letter-spacing:-.05em;line-height:1.05;margin:6px 0}
 .notice{border-left:4px solid #98a2b3;background:#f9fafb;border-radius:9px;padding:13px 15px;color:#475467;font-size:13px;line-height:1.55;margin-top:16px}
+.summary-card{border:1px solid #bfd3ff;background:#f4f8ff;border-radius:16px;padding:17px 19px;margin:14px 0 18px}
+.summary-card .eyebrow{font-size:12px;font-weight:800;color:#3154b8;margin-bottom:6px}
+.summary-card .headline{font-size:19px;font-weight:850;color:#172033;line-height:1.45}
+.summary-card .sub{font-size:12px;color:#667085;line-height:1.5;margin-top:7px}
 div[data-testid="stMetric"]{border:1px solid #e4e7ec;border-radius:15px;padding:14px;background:#fff}
 </style>
 """, unsafe_allow_html=True)
@@ -73,6 +77,47 @@ def fmt(name, value):
     if name == "max_duration_PART_B":
         return f"{value:.3f} s"
     return f"{value:.3f}"
+
+
+def build_one_line_summary(features):
+    """Create a neutral, direction-aware one-line research summary."""
+    p_correct = percentile("non_cut_correct_targets_touches_PART_B", features["non_cut_correct_targets_touches_PART_B"])
+    p_stable = percentile("is_valid_sum_B", features["is_valid_sum_B"])
+    p_switch_acc = percentile("non_cut_correct_targets_touches_B_A_ratio", features["non_cut_correct_targets_touches_B_A_ratio"])
+    p_rt = percentile("non_cut_rt_PART_B", features["non_cut_rt_PART_B"])
+    p_hes = percentile("max_duration_PART_B", features["max_duration_PART_B"])
+    p_trans = percentile("state_transitions_B_A_ratio", features["state_transitions_B_A_ratio"])
+
+    strengths = []
+    if p_correct >= 75:
+        strengths.append("정확성")
+    if p_stable >= 75:
+        strengths.append("수행 안정성")
+    if p_switch_acc >= 75:
+        strengths.append("전환 정확성")
+
+    burdens = []
+    if p_rt >= 75:
+        burdens.append("반응 지연")
+    if p_hes >= 75:
+        burdens.append("망설임")
+    if p_trans >= 75:
+        burdens.append("행동 전환 증가")
+
+    if len(strengths) >= 2 and not burdens:
+        headline = "정확성과 수행 안정성이 높게 나타났고, 전환 과제에서도 비교적 안정적인 수행 패턴이 관찰되었습니다."
+    elif len(burdens) >= 2 and not strengths:
+        headline = f"전환 과제에서 {', '.join(burdens[:2])} 특성이 상대적으로 두드러진 행동 패턴이 관찰되었습니다."
+    elif strengths and burdens:
+        headline = f"{', '.join(strengths[:2])}은 비교적 높게 나타났지만, {', '.join(burdens[:2])} 특성도 함께 관찰되었습니다."
+    elif strengths:
+        headline = f"{', '.join(strengths[:2])} 지표가 연구표본에서 상대적으로 높은 위치에 나타났습니다."
+    elif burdens:
+        headline = f"{', '.join(burdens[:2])} 특성이 연구표본에서 상대적으로 높은 위치에 나타났습니다."
+    else:
+        headline = "핵심 인지행동 지표가 연구표본의 중앙 구간과 대체로 유사한 패턴으로 나타났습니다."
+
+    return headline
 
 
 st.markdown("""
@@ -131,6 +176,7 @@ with tab_result:
         pred = pack["prediction"]
         f = extracted["features"]
         score = pred["research_probability_mci_pattern"] * 100
+        one_line_summary = build_one_line_summary(f)
 
         st.subheader("인지행동 분석 결과")
         left, right = st.columns([0.42, 0.58], gap="large")
@@ -146,6 +192,13 @@ with tab_result:
             q3.metric("분석 Feature", "103개")
             if f["is_valid_sum_A"] < 80 or f["is_valid_sum_B"] < 80:
                 st.warning("유효 trial 비율이 낮아 결과 해석에 주의가 필요합니다.")
+
+        st.markdown(
+            f'<div class="summary-card"><div class="eyebrow">한줄 결과</div>'
+            f'<div class="headline">{one_line_summary}</div>'
+            f'<div class="sub">74명 연구표본 내 상대 위치를 바탕으로 한 연구용 행동 요약이며, 의료적 진단을 의미하지 않습니다.</div></div>',
+            unsafe_allow_html=True,
+        )
 
         names = [
             "non_cut_correct_targets_touches_PART_B",
@@ -183,6 +236,7 @@ with tab_result:
 
         notable = [REFERENCE[name]["label"] for name in names if percentile(name, f[name]) <= 25 or percentile(name, f[name]) >= 75]
         st.markdown("#### 분석 요약")
+        st.markdown(f"**한줄 해석:** {one_line_summary}")
         if notable:
             st.write(f"이번 검사에서는 **{', '.join(notable[:3])}** 지표가 연구표본의 중앙 구간에서 비교적 벗어난 위치에 있었습니다. 장치·마우스 사용 습관·피로도·검사 환경 등의 영향이 있으므로 단독으로 해석하지 않습니다.")
         else:
@@ -192,6 +246,7 @@ with tab_result:
 
         payload = {
             "session_id": raw.get("session_id") if raw else None,
+            "one_line_summary": one_line_summary,
             "research_model_output": pred,
             "core_features": {name: f[name] for name in names},
             "all_103_features": f,
