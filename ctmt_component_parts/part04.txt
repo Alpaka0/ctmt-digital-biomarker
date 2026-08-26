@@ -1,0 +1,44 @@
+assName='small';
+    nextTargetEl.textContent='-';correctCountEl.textContent='0 / 15';remainingEl.textContent='25.00 s';eventCountEl.textContent='0';
+    preview.textContent='아직 기록 없음';progressBar.style.width='0%';
+    startBtn.disabled=false;nextBtn.disabled=true;downloadJsonBtn.disabled=true;sendPythonBtn.disabled=true;
+    summaryBox.classList.add('hidden');
+  }
+
+  function downloadBlob(filename,text,type){
+    const blob=new Blob([text],{type});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},0);
+  }
+  function downloadJSON(){
+    if(session) downloadBlob(`${session.session_id}.json`,JSON.stringify(session,null,2),'application/json');
+  }
+  function sendSessionToPython(){
+    if(!session || !session.completed) return;
+    const totalEvents=session.trials.reduce((a,t)=>a+t.events.length,0);
+    const analysis=session.trials.filter(t=>!t.is_practice);
+    sendDataToPython({
+      ...session,
+      summary:{
+        trial_count:analysis.length,
+        valid_trial_count:analysis.filter(t=>t.is_valid).length,
+        total_events:totalEvents
+      }
+    });
+    status.textContent='Python으로 전송 완료';
+    status.className='small ok';
+  }
+
+  stage.addEventListener('pointermove',recordPointer);
+  stage.addEventListener('pointerdown',recordPointer);
+  stage.addEventListener('pointerup',recordPointer);
+  startBtn.addEventListener('click',startSession);
+  nextBtn.addEventListener('click',prepareTrial);
+  resetBtn.addEventListener('click',resetAll);
+  downloadJsonBtn.addEventListener('click',downloadJSON);
+  sendPythonBtn.addEventListener('click',sendSessionToPython);
+})();
+</script>
+</body>
+</html>
