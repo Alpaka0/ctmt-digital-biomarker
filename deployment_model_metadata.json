@@ -1,0 +1,15 @@
+{
+  "training_subjects": 74,
+  "control_n": 33,
+  "mci_n": 41,
+  "input_features": 103,
+  "selected_features": 20,
+  "best_params_full_data_inner_cv": {
+    "classifier__C": 0.1,
+    "classifier__gamma": "scale",
+    "classifier__kernel": "rbf"
+  },
+  "best_inner_cv_auc_full_data": 0.6783333333333333,
+  "official_reproduction_auc_nested_cv": 0.6703621581670363,
+  "important_note": "best_inner_cv_auc_full_data is used only to select deployment hyperparameters. It is not an unbiased performance estimate. The reproducibility performance reported for this project remains the nested-CV AUC=0.6704."
+}
