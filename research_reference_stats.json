@@ -1,0 +1,68 @@
+{
+  "non_cut_correct_targets_touches_PART_B": {
+    "label": "Part B 정확 연결",
+    "unit": "/ 15",
+    "desc": "교대 연결 과제에서 순서대로 도달한 목표 수",
+    "n": 74,
+    "min": 9.0,
+    "q1": 10.6,
+    "median": 11.55,
+    "q3": 12.770833333333336,
+    "max": 14.333333333333334
+  },
+  "is_valid_sum_B": {
+    "label": "Part B 수행 안정성",
+    "unit": "%",
+    "desc": "분석 가능한 Part B trial의 비율",
+    "n": 74,
+    "min": 10.0,
+    "q1": 40.0,
+    "median": 60.0,
+    "q3": 80.0,
+    "max": 100.0
+  },
+  "non_cut_correct_targets_touches_B_A_ratio": {
+    "label": "전환 정확성 B/A",
+    "unit": "",
+    "desc": "Part A 대비 Part B 정확 연결의 상대적 비율",
+    "n": 74,
+    "min": 0.664406779661017,
+    "q1": 0.8235106259435606,
+    "median": 0.8961206896551723,
+    "q3": 0.9575520833333333,
+    "max": 1.125
+  },
+  "non_cut_rt_PART_B": {
+    "label": "Part B 반응시간",
+    "unit": "ms",
+    "desc": "Part B trial의 평균 수행시간",
+    "n": 74,
+    "min": 19280.88888888889,
+    "q1": 23281.15,
+    "median": 24951.4,
+    "q3": 25016.0875,
+    "max": 25153.14285714286
+  },
+  "max_duration_PART_B": {
+    "label": "최대 Hesitation",
+    "unit": "s",
+    "desc": "Part B에서 관찰된 최대 망설임 구간의 평균",
+    "n": 74,
+    "min": 0.0571261571188058,
+    "q1": 0.6218408760493427,
+    "median": 0.8936156985841485,
+    "q3": 1.2483307299698936,
+    "max": 3.5845385999991777
+  },
+  "state_transitions_B_A_ratio": {
+    "label": "상태전환 B/A",
+    "unit": "",
+    "desc": "Part A 대비 Part B의 Search/Travel/Hesitation 전환 비율",
+    "n": 74,
+    "min": 0.8472222222222222,
+    "q1": 0.9620016611295681,
+    "median": 1.0328201099764336,
+    "q3": 1.0757103257103258,
+    "max": 1.28
+  }
+}
