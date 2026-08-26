@@ -1,0 +1,91 @@
+3, 0.492808], [0.743523, 0.409288], [0.214563, 0.743368], [0.465123, 0.632008], [0.799203, 0.854728], [0.966243, 0.826888], [0.854883, 0.771208], [0.743523, 0.659848]]}, {"part": "B", "coords": [[0.827043, 0.243176], [0.660003, 0.292669], [0.687843, 0.366909], [0.827043, 0.639123], [0.966243, 0.738109], [0.854883, 0.688616], [0.465123, 0.639123], [0.298083, 0.762856], [0.381603, 0.663869], [0.242403, 0.490643], [0.298083, 0.639123], [0.214563, 0.416403], [0.687843, 0.663869], [0.604323, 0.391656], [0.520803, 0.243176]]}, {"part": "A", "coords": [[0.298083, 0.782035], [0.381603, 0.865555], [0.353763, 0.670675], [0.242403, 0.614995], [0.492963, 0.670675], [0.660003, 0.614995], [0.743523, 0.364435], [0.882723, 0.253075], [0.771363, 0.559315], [0.910563, 0.336595], [0.966243, 0.253075], [0.771363, 0.113875], [0.520803, 0.308755], [0.298083, 0.141715], [0.298083, 0.420115]]}, {"part": "B", "coords": [[0.57937, 0.449089], [0.788685, 0.5522], [0.938196, 0.655311], [0.639174, 0.603756], [0.669076, 0.397533], [0.429859, 0.577978], [0.130836, 0.732644], [0.280348, 0.5522], [0.519565, 0.423311], [0.250445, 0.474867], [0.220543, 0.371756], [0.130836, 0.165533], [0.399956, 0.242867], [0.519565, 0.294422], [0.639174, 0.345978]]}, {"part": "A", "coords": [[0.315096, 0.69769], [0.454296, 0.899788], [0.370776, 0.784303], [0.287256, 0.639948], [0.203736, 0.495592], [0.398616, 0.726561], [0.509976, 0.870916], [0.593496, 0.726561], [0.426456, 0.466721], [0.231576, 0.408979], [0.677016, 0.149139], [0.816216, 0.322365], [0.955416, 0.235752], [0.732696, 0.408979], [0.482136, 0.553334]]}, {"part": "B", "coords": [[0.492963, 0.392275], [0.771363, 0.141715], [0.632163, 0.225235], [0.492963, 0.113875], [0.325923, 0.253075], [0.492963, 0.197395], [0.576483, 0.420115], [0.771363, 0.336595], [0.966243, 0.503635], [0.660003, 0.559315], [0.465123, 0.503635], [0.214563, 0.447955], [0.465123, 0.698515], [0.576483, 0.754195], [0.409443, 0.698515]]}, {"part": "A", "coords": [[0.852511, 0.168214], [0.723622, 0.263076], [0.878289, 0.476516], [0.7494, 0.334223], [0.904067, 0.595094], [0.826733, 0.642525], [0.672067, 0.713672], [0.311178, 0.452801], [0.465844, 0.547663], [0.7494, 0.595094], [0.594733, 0.452801], [0.465844, 0.286792], [0.2854, 0.168214], [0.5174, 0.357939], [0.336956, 0.263076]]}, {"part": "B", "coords": [[0.435324, 0.865555], [0.596177, 0.614995], [0.381706, 0.447955], [0.247661, 0.197395], [0.220852, 0.280915], [0.27447, 0.113875], [0.408515, 0.336595], [0.596177, 0.197395], [0.810648, 0.392275], [0.891075, 0.531475], [0.837457, 0.754195], [0.676604, 0.559315], [0.542559, 0.420115], [0.676604, 0.614995], [0.51575, 0.475795]]}, {"part": "A", "coords": [[0.249517, 0.762753], [0.162904, 0.655517], [0.595971, 0.84318], [0.451615, 0.682326], [0.249517, 0.521473], [0.653713, 0.253384], [0.740326, 0.146148], [0.798068, 0.226575], [0.884682, 0.414237], [0.82694, 0.146148], [0.971295, 0.387428], [0.595971, 0.575091], [0.451615, 0.628708], [0.5671, 0.762753], [0.769197, 0.84318]]}, {"part": "B", "coords": [[0.325923, 0.899788], [0.325923, 0.495592], [0.520803, 0.380108], [0.576483, 0.582205], [0.966243, 0.264623], [0.827043, 0.206881], [0.910563, 0.293494], [0.715683, 0.43785], [0.771363, 0.293494], [0.604323, 0.235752], [0.214563, 0.43785], [0.381603, 0.206881], [0.409443, 0.091396], [0.270243, 0.206881], [0.214563, 0.380108]]}];
+  const TARGET_RADIUS = 0.0275;
+  const MAX_TRIAL_MS = 25000;
+
+  let plan = [];
+  let session = null;
+  let currentTrialIndex = -1;
+  let current = null;
+  let rafTimer = null;
+  let lastPointerMoveMs = -Infinity;
+
+  function uid(){
+    return 'ctmt_' + new Date().toISOString().replace(/\D/g,'').slice(0,14) + '_' + Math.random().toString(36).slice(2,8);
+  }
+
+  function buildPlan(){
+    const p = [
+      {part:'A',is_practice:true,trial_index:0,layout_index:0},
+      {part:'B',is_practice:true,trial_index:0,layout_index:1}
+    ];
+    for(let i=0;i<20;i++){
+      p.push({
+        part:(i%2===0?'A':'B'),
+        is_practice:false,
+        trial_index:Math.floor(i/2)+1,
+        layout_index:i+2
+      });
+    }
+    return p;
+  }
+
+  function normPointer(e){
+    const r = stage.getBoundingClientRect();
+    return {
+      x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),
+      y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))
+    };
+  }
+
+  function nowRel(){
+    return current && current._perfStart ? performance.now()-current._perfStart : 0;
+  }
+
+  function dist(a,b){ return Math.hypot(a.x-b.x,a.y-b.y); }
+
+  function recordPointer(e){
+    if(!current || !current.started || current.finished) return;
+    const rel=nowRel();
+    if(e.type==='pointermove' && (rel-lastPointerMoveMs)<16) return;
+    if(e.type==='pointermove') lastPointerMoveMs=rel;
+
+    const p=normPointer(e);
+    current.events.push({
+      t_ms:+rel.toFixed(3),
+      x_norm:+p.x.toFixed(6),
+      y_norm:+p.y.toFixed(6),
+      event_type:e.type,
+      button:('button' in e ? e.button : null),
+      buttons:('buttons' in e ? e.buttons : null)
+    });
+    eventCountEl.textContent=current.events.length;
+    updateCrosshair(p.x,p.y);
+
+    if(e.type==='pointermove') detectTargets(p, rel);
+  }
+
+  function detectTargets(p, rel){
+    if(!current || current.finished) return;
+    const expected=current.targets[current.nextIndex];
+    if(!expected) return;
+
+    const d=dist(p,{x:expected.target_x_norm,y:expected.target_y_norm});
+    if(d<=TARGET_RADIUS){
+      expected.reached=true;
+      expected.reached_at_ms=+rel.toFixed(3);
+      const el=stage.querySelector(`[data-order="${expected.target_order}"]`);
+      if(el) el.classList.add('hit');
+      current.correct_count++;
+      current.nextIndex++;
+      correctCountEl.textContent=`${current.correct_count} / 15`;
+      nextTargetEl.textContent=current.targets[current.nextIndex]?.target_label ?? '완료';
+
+      if(current.nextIndex>=current.targets.length){
+        finishTrial('completed');
+      }
+    }
+  }
+
+  function updateCrosshair(x,y){
+    let dot=stage.querySelector('.crosshair');
+    if(
