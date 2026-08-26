@@ -1,0 +1,192 @@
+!dot){
+      dot=document.createElement('div');
+      dot.className='crosshair';
+      stage.appendChild(dot);
+    }
+    dot.style.left=(x*100)+'%';
+    dot.style.top=(y*100)+'%';
+  }
+
+  function renderTargets(seq,coords){
+    seq.forEach((label,i)=>{
+      const [x,y]=coords[i];
+      const b=document.createElement('div');
+      b.className='target';
+      b.textContent=label;
+      b.style.left=(x*100)+'%';
+      b.style.top=(y*100)+'%';
+      b.dataset.order=String(i+1);
+      stage.appendChild(b);
+    });
+  }
+
+  function renderFixation(){
+    stage.innerHTML='';
+    const f=document.createElement('button');
+    f.type='button';
+    f.className='fixation';
+    f.textContent='+';
+    f.title='클릭하여 trial 시작';
+    f.addEventListener('click', beginTimedTrial);
+    stage.appendChild(f);
+  }
+
+  function prepareTrial(){
+    currentTrialIndex++;
+    if(currentTrialIndex>=plan.length){
+      finishSession();return;
+    }
+    const meta=plan[currentTrialIndex];
+    const seq=meta.part==='A'?seqA:seqB;
+    const coords=layoutBank[meta.layout_index].coords;
+    const rect=stage.getBoundingClientRect();
+
+    current={
+      session_id:session.session_id,
+      part:meta.part,
+      trial_index:meta.trial_index,
+      is_practice:meta.is_practice,
+      layout_index:meta.layout_index,
+      target_radius_norm:TARGET_RADIUS,
+      canvas_width:Math.round(rect.width),
+      canvas_height:Math.round(rect.height),
+      started:false,
+      finished:false,
+      trial_start_iso:null,
+      trial_end_iso:null,
+      trial_end_ms:null,
+      end_reason:null,
+      correct_count:0,
+      nextIndex:0,
+      targets:seq.map((label,i)=>({
+        target_order:i+1,target_label:label,
+        target_x_norm:coords[i][0],target_y_norm:coords[i][1],
+        reached:false,reached_at_ms:null
+      })),
+      events:[],
+      _perfStart:null
+    };
+
+    renderFixation();
+    trialLabel.textContent=`${meta.is_practice?'연습':'분석'} · Part ${meta.part} · ${meta.is_practice?'Practice':'Trial '+meta.trial_index}`;
+    instruction.textContent='중앙 +를 클릭하면 25초 trial이 시작됩니다.';
+    status.textContent='Fixation 대기';
+    status.className='small';
+    nextTargetEl.textContent='-';
+    correctCountEl.textContent='0 / 15';
+    remainingEl.textContent='25.00 s';
+    eventCountEl.textContent='0';
+    nextBtn.disabled=true;
+    updateProgress();
+  }
+
+  function beginTimedTrial(){
+    if(!current || current.started) return;
+    current.started=true;
+    current.trial_start_iso=new Date().toISOString();
+    current._perfStart=performance.now();
+    lastPointerMoveMs=-Infinity;
+    stage.innerHTML='';
+    const seq=current.part==='A'?seqA:seqB;
+    const coords=layoutBank[current.layout_index].coords;
+    renderTargets(seq,coords);
+    nextTargetEl.textContent=seq[0];
+    instruction.textContent=current.part==='A'
+      ? '1 → 2 → 3 순서로 커서를 원 안에 통과시키세요.'
+      : '1 → A → 2 → B 순서로 번갈아 통과시키세요.';
+    status.textContent='진행 중';
+    status.className='small ok';
+    tick();
+  }
+
+  function tick(){
+    if(!current || !current.started || current.finished) return;
+    const rel=nowRel();
+    const remain=Math.max(0,MAX_TRIAL_MS-rel);
+    remainingEl.textContent=(remain/1000).toFixed(2)+' s';
+    if(remain<=0){ finishTrial('timeout');return; }
+    rafTimer=requestAnimationFrame(tick);
+  }
+
+  function finishTrial(reason){
+    if(!current || current.finished) return;
+    current.finished=true;
+    current.trial_end_ms=+Math.min(nowRel(),MAX_TRIAL_MS).toFixed(3);
+    current.trial_end_iso=new Date().toISOString();
+    current.end_reason=reason;
+    current.is_valid=current.correct_count>=8;
+    cancelAnimationFrame(rafTimer);
+
+    const clean={...current};
+    delete clean._perfStart;
+    delete clean.nextIndex;
+    session.trials.push(clean);
+
+    status.textContent=reason==='completed'?'Trial 완료':'25초 종료';
+    status.className=reason==='completed'?'small ok':'small warn';
+    instruction.textContent=`도달 target ${clean.correct_count}/15 · ${clean.is_valid?'분석 가능':'8개 미만으로 invalid'}`;
+    preview.textContent=JSON.stringify(clean,null,2);
+
+    if(currentTrialIndex<plan.length-1){
+      nextBtn.disabled=false;
+    } else {
+      finishSession();
+    }
+  }
+
+  function updateProgress(){
+    const done=Math.max(0,currentTrialIndex);
+    progressBar.style.width=(plan.length?(done/plan.length)*100:0)+'%';
+  }
+
+  function startSession(){
+    plan=buildPlan();
+    currentTrialIndex=-1;
+    session={
+      schema_version:'2.0',
+      session_id:uid(),
+      mode:'research',
+      started_at:new Date().toISOString(),
+      protocol:{
+        practice_trials:2,
+        analysis_trials:20,
+        alternating:true,
+        max_trial_ms:MAX_TRIAL_MS,
+        correct_threshold:8,
+        consecutive_points:5,
+        target_radius_norm:TARGET_RADIUS
+      },
+      trials:[],
+      completed:false
+    };
+    summaryBox.classList.add('hidden');
+    downloadJsonBtn.disabled=true;
+    sendPythonBtn.disabled=true;
+    startBtn.disabled=true;
+    prepareTrial();
+  }
+
+  function finishSession(){
+    if(!session || session.completed) return;
+    session.finished_at=new Date().toISOString();
+    session.completed=true;
+    nextBtn.disabled=true;
+    downloadJsonBtn.disabled=false;
+    sendPythonBtn.disabled=false;
+    status.textContent='전체 완료';
+    status.className='small ok';
+    progressBar.style.width='100%';
+    summaryBox.classList.remove('hidden');
+    const analysis=session.trials.filter(t=>!t.is_practice);
+    const valid=analysis.filter(t=>t.is_valid).length;
+    const totalEvents=session.trials.reduce((a,t)=>a+t.events.length,0);
+    summaryText.textContent=`분석 trial ${analysis.length}개 · valid ${valid}개 · Pointer event ${totalEvents.toLocaleString()}개`;
+  }
+
+  function resetAll(){
+    if(!confirm('현재 기록을 모두 삭제하고 초기화할까요?')) return;
+    cancelAnimationFrame(rafTimer);
+    session=null;plan=[];current=null;currentTrialIndex=-1;
+    stage.innerHTML='';
+    trialLabel.textContent='검사 대기';instruction.textContent='검사 시작을 누르세요.';
+    status.textContent='Ready';status.cl
