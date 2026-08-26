@@ -1,6 +1,6 @@
 assName='small';
     nextTargetEl.textContent='-';correctCountEl.textContent='0 / 15';remainingEl.textContent='25.00 s';eventCountEl.textContent='0';
-    preview.textContent='아직 기록 없음';progressBar.style.width='0%';
+    preview.textContent='NO TRACKING DATA';progressBar.style.width='0%';
     startBtn.disabled=false;nextBtn.disabled=true;downloadJsonBtn.disabled=true;sendPythonBtn.disabled=true;
     summaryBox.classList.add('hidden');
   }
@@ -26,7 +26,7 @@ assName='small';
         total_events:totalEvents
       }
     });
-    status.textContent='Python으로 전송 완료';
+    status.textContent='ANALYSIS SENT';
     status.className='small ok';
   }
 
