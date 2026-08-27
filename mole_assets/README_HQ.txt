@@ -1,0 +1,1 @@
+High-quality Cognitive Mole image data generated from the user's latest supplied assets. Runtime component loads the .b64 files as data URLs.
