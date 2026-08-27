@@ -29,9 +29,9 @@ const seqA=Array.from({length:15},(_,i)=>String(i+1));
 const seqB=['1','A','2','B','3','C','4','D','5','E','6','F','7','G','8'];
 const LIMIT=45000,HIT_PAD=1.0;
 const HOLES=[
- {id:'H1',x:.286,y:.382,scale:.125},{id:'H2',x:.486,y:.382,scale:.125},{id:'H3',x:.699,y:.382,scale:.125},
- {id:'H4',x:.192,y:.535,scale:.142},{id:'H5',x:.386,y:.535,scale:.142},{id:'H6',x:.600,y:.535,scale:.142},{id:'H7',x:.786,y:.535,scale:.142},
- {id:'H8',x:.287,y:.716,scale:.158},{id:'H9',x:.486,y:.716,scale:.158},{id:'H10',x:.699,y:.716,scale:.158}
+ {id:'H1',x:.281,y:.416,scale:.174},{id:'H2',x:.490,y:.416,scale:.174},{id:'H3',x:.718,y:.416,scale:.174},
+ {id:'H4',x:.190,y:.579,scale:.180},{id:'H5',x:.390,y:.579,scale:.180},{id:'H6',x:.590,y:.579,scale:.180},{id:'H7',x:.806,y:.579,scale:.180},
+ {id:'H8',x:.281,y:.767,scale:.190},{id:'H9',x:.490,y:.767,scale:.190},{id:'H10',x:.700,y:.767,scale:.190}
 ];
 const actors=[0,1,2].map(i=>({id:i,el:document.getElementById('actor'+i),badge:document.getElementById('badge'+i),label:null,role:null,hole:null,visible:false,spawn:0}));
 let session=null,round=null,raf=null,lastMove=-Infinity,currentActor=null,previewActor=null,distractorActor=null,recentHoles=[];
