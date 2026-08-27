@@ -44,7 +44,14 @@ function swing(){hammer.classList.remove('hammerSwing');void hammer.offsetWidth;
 function pop(text,ok=true){toast.textContent=text;toast.style.color=ok?'#fffef2':'#fff0ef';toast.classList.remove('show');void toast.offsetWidth;toast.classList.add('show')}
 function occupied(except=null){return actors.filter(a=>a!==except&&a.visible&&a.hole).map(a=>a.hole.id)}
 function chooseHole(actor){let pool=HOLES.filter(h=>!occupied(actor).includes(h.id)&&h.id!==(actor.hole&&actor.hole.id)&&!recentHoles.slice(-2).includes(h.id));if(!pool.length)pool=HOLES.filter(h=>!occupied(actor).includes(h.id));const h=pool[Math.floor(Math.random()*pool.length)]||HOLES[0];recentHoles.push(h.id);if(recentHoles.length>5)recentHoles.shift();return h}
-function positionActor(actor,hole){actor.hole=hole;actor.el.style.left=(hole.x*100)+'%';actor.el.style.top=(hole.y*100)+'%';actor.el.style.width=(hole.scale*100)+'%';actor.badge.style.left=(hole.x*100)+'%';actor.badge.style.top=((hole.y-hole.scale*.72)*100)+'%'}
+function positionActor(actor,hole){
+  actor.hole=hole;
+  actor.el.style.left=(hole.x*100)+'%';
+  actor.el.style.top=(hole.y*100)+'%';
+  actor.el.style.width=(hole.scale*100)+'%';
+  actor.badge.style.left=(hole.x*100)+'%';
+  actor.badge.style.top=((hole.y-hole.scale*.92)*100)+'%';
+}
 function setActor(actor,label,role,hole=null){const h=hole||chooseHole(actor);positionActor(actor,h);actor.label=label;actor.role=role;actor.spawn=rel();actor.visible=true;actor.badge.textContent=label;actor.badge.className='badge '+role;actor.el.className='moleActor pop';if(round&&round.spawns)round.spawns.push({t_ms:+actor.spawn.toFixed(3),code:label,role:role,hole_id:h.id,x_norm:h.x,y_norm:h.y,scale:h.scale})}
 function hideActor(actor){actor.visible=false;actor.label=null;actor.role=null;actor.el.className='moleActor hidden';actor.badge.className='badge hidden'}
 function hideAll(){actors.forEach(hideActor)}
