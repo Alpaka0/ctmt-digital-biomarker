@@ -1,4 +1,4 @@
-v>
+    <div class="rangeLabel">MOUSE TRAJECTORY RECORDING</div>
     <div id="actor0" class="moleActor hidden"><img class="moleImg" src="" data-asset="mole_hole" alt=""></div><div id="badge0" class="badge hidden"></div>
     <div id="actor1" class="moleActor hidden"><img class="moleImg" src="" data-asset="mole_hole" alt=""></div><div id="badge1" class="badge hidden"></div>
     <div id="actor2" class="moleActor hidden"><img class="moleImg" src="" data-asset="mole_hole" alt=""></div><div id="badge2" class="badge hidden"></div>
@@ -6,7 +6,7 @@ v>
     <div id="toast" class="toast">BONK!</div>
     <div id="message" class="message"><img data-asset="mole" src="" alt=""><h2>COGNITIVE MOLE</h2><p><strong>ROUND A</strong>는 숫자를 순서대로, <strong>ROUND B</strong>는 숫자와 문자를 번갈아 찾습니다.<br>매 순간 3마리 중 올바른 두더지를 찾아 망치로 클릭하세요.</p><div class="paperMap"><b>논문 연결:</b> sequential processing · task switching · response time · mouse trajectory</div></div>
   </div>
-  <div class="bottom"><div id="rule" class="rule">ROUND A: 1 → 2 → 3 → … → 15</div><div>정답 강조 · 위치 안내 없음</div></div>
+  <div class="bottom"><div id="rule" class="rule">ROUND A: 1 → 2 → 3 → … → 15</div><div>정답 강조 없음 · 위치 안내 없음</div></div>
 </div>
 <script>
 function post(type,data){window.parent.postMessage(Object.assign({isStreamlitMessage:true,type:type},data),"*")}
@@ -14,8 +14,23 @@ function resize(){post("streamlit:setFrameHeight",{height:document.documentEleme
 function sendData(v){post("streamlit:setComponentValue",{value:v})}
 window.addEventListener("message",e=>{if(e.data&&e.data.type==="streamlit:render")setTimeout(resize,0)});
 post("streamlit:componentReady",{apiVersion:1});setTimeout(resize,0);
-(()=>{
-const ASSETS={board:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_board.webp',mole:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole.webp',hammer:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/hammer.webp',mole_hole:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_hole.webp'};
+(async()=>{
+const ASSET_B64={
+ board:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_board_hq.b64',
+ mole:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_hq.b64',
+ hammer:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/hammer_hq.b64',
+ mole_hole:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_hole_hq.b64'
+};
+async function loadAssets(){
+ const entries=await Promise.all(Object.entries(ASSET_B64).map(async([k,u])=>{
+   const r=await fetch(u,{cache:'no-store'});
+   if(!r.ok)throw new Error(`asset ${k} ${r.status}`);
+   const b64=(await r.text()).trim();
+   return [k,`data:image/webp;base64,${b64}`];
+ }));
+ return Object.fromEntries(entries);
+}
+const ASSETS=await loadAssets();
 const range=document.getElementById('range'),hammer=document.getElementById('hammer'),toast=document.getElementById('toast'),message=document.getElementById('message');
 const startBtn=document.getElementById('start'),nextBtn=document.getElementById('next'),resetBtn=document.getElementById('reset'),sendBtn=document.getElementById('send');
 const roundEl=document.getElementById('round'),hitsEl=document.getElementById('hits'),errorsEl=document.getElementById('errors'),timeEl=document.getElementById('time'),ruleEl=document.getElementById('rule');
@@ -44,7 +59,3 @@ function setActor(actor,label,role,hole=null){const h=hole||chooseHole(actor);po
 function hideActor(actor){actor.visible=false;actor.label=null;actor.role=null;actor.el.className='moleActor hidden';actor.badge.className='badge hidden'}
 function hideAll(){actors.forEach(hideActor)}
 function distractorLabel(){const blocked=new Set(actors.filter(a=>a.visible&&a.role!=='distractor').map(a=>a.label));let pool=seq().filter(v=>!blocked.has(v));if(!pool.length)pool=round.part==='B'?['X','Y','Z']:['3','7','11'];return pool[Math.floor(Math.random()*pool.length)]}
-function expected(){return seq()[round.idx]}
-function updateHud(){hitsEl.textContent=round.correct_hits+' / 15';errorsEl.textContent=round.wrong_target_clicks+' / '+round.miss_clicks}
-function initMoles(){hideAll();recentHoles=[];currentActor=actors[0];previewActor=actors[1];distractorActor=actors[2];setActor(currentActor,seq()[0],'current');setActor(previewActor,seq()[1],'preview');setActor(distractorActor,distractorLabel(),'distractor');round.nextIdx=2;round.currentActivatedAt=rel()}
-function refreshDistractor(){hideActor(d
