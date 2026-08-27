@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>cTMT Cognitive Aim Trainer</title>
+<title>cTMT Research Mouse Task</title>
 <style>
   :root{
     --bg:#07111f; --panel:#0d1b2a; --panel2:#102536; --text:#ecf7ff; --muted:#91a9ba;
@@ -34,7 +34,6 @@
   #trialLabel{font-weight:900;letter-spacing:.035em;color:#f5fbff}
   #status{font-weight:900;letter-spacing:.07em;text-transform:uppercase}
 
-  /* Fixed camera FPS training range.  The cTMT target coordinates remain unchanged. */
   #stage{
     position:relative;width:100%;aspect-ratio:10/7;min-height:480px;
     background:
@@ -54,11 +53,10 @@
     border-top:2px solid rgba(202,224,231,.18)
   }
   #stage:after{
-    content:"COGNITIVE AIM RANGE  //  SECTOR 07";position:absolute;left:12px;top:9px;z-index:1;pointer-events:none;
+    content:"RESEARCH cTMT  //  MOUSE TRAJECTORY";position:absolute;left:12px;top:9px;z-index:1;pointer-events:none;
     color:rgba(222,242,248,.48);font-size:8px;font-weight:900;letter-spacing:.16em;text-shadow:0 1px 2px #07111f
   }
 
-  /* Same 44px visible target footprint; styled as an FPS aim-training orb. */
   .target{
     position:absolute;width:44px;height:44px;border-radius:50%;transform:translate(-50%,-50%);
     display:flex;align-items:center;justify-content:center;
@@ -87,10 +85,9 @@
     color:var(--accent2);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:400;z-index:5;
     cursor:pointer;box-shadow:0 0 0 8px rgba(31,215,197,.08),0 0 24px rgba(31,215,197,.28)
   }
-  .fixation:after{content:"INITIALIZE AIM";position:absolute;top:86px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:900;letter-spacing:.14em;color:#9edbd4;white-space:nowrap;text-shadow:0 1px 2px #07111f}
+  .fixation:after{content:"START TRACKING";position:absolute;top:86px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:900;letter-spacing:.14em;color:#9edbd4;white-space:nowrap;text-shadow:0 1px 2px #07111f}
   svg.trace{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
 
-  /* Pointer is rendered as an FPS reticle, not a standard cursor. */
   .crosshair{position:absolute;width:24px;height:24px;transform:translate(-50%,-50%);z-index:4;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
   .crosshair:before,.crosshair:after{content:"";position:absolute;background:#76ffe6;border-radius:1px;box-shadow:0 0 5px rgba(118,255,230,.7)}
   .crosshair:before{width:2px;height:24px;left:11px;top:0}
@@ -118,21 +115,21 @@
 <div class="wrap">
   <div class="top">
     <div>
-      <div class="kicker">Cognitive Aim // Mission Control</div>
-      <h1>cTMT AIM TRAINING MISSION</h1>
-      <div class="small">Protocol locked · Training A/B + 20 alternating trials · 25 s per trial</div>
+      <div class="kicker">RESEARCH cTMT // PAPER REPLICATION</div>
+      <h1>cTMT MOUSE TRAJECTORY TASK</h1>
+      <div class="small">Protocol locked · Practice A/B + 20 alternating trials · 25 s per trial</div>
     </div>
-    <div class="pill">● AIM TRACKING ONLINE</div>
+    <div class="pill">● TRACKING ONLINE</div>
   </div>
 
   <div class="operator">
-    <div class="operator-avatar">🧑‍🚀</div>
-    <div><div class="operator-name">Mission Operator // Echo</div><div class="operator-msg">중앙 조준점을 초기화한 뒤 숫자·문자가 적힌 Orb를 순서대로 에임으로 통과하세요. 클릭이나 사격은 필요하지 않습니다.</div></div>
+    <div class="operator-avatar">🖱️</div>
+    <div><div class="operator-name">Research Protocol</div><div class="operator-msg">중앙 시작점을 클릭한 뒤 숫자·문자가 적힌 원형 목표를 규칙 순서대로 마우스로 통과하세요. 시작 이후에는 추가 클릭이 필요하지 않습니다.</div></div>
   </div>
 
   <div class="panel controls">
-    <button id="startBtn" class="primary">MISSION START</button>
-    <button id="nextBtn" class="secondary" disabled>NEXT MISSION</button>
+    <button id="startBtn" class="primary">START SESSION</button>
+    <button id="nextBtn" class="secondary" disabled>NEXT TRIAL</button>
     <button id="resetBtn" class="danger">RESET</button>
     <button id="downloadJsonBtn" class="secondary" disabled>RAW JSON</button>
     <button id="sendPythonBtn" class="primary" disabled>ANALYZE</button>
@@ -142,35 +139,35 @@
     <div class="panel">
       <div class="hud-title">
         <div>
-          <div id="trialLabel">MISSION STANDBY</div>
-          <div id="instruction" class="small">MISSION START를 눌러주세요.</div>
+          <div id="trialLabel">RESEARCH STANDBY</div>
+          <div id="instruction" class="small">START SESSION을 눌러주세요.</div>
         </div>
         <div id="status" class="small">READY</div>
       </div>
       <div class="progress"><div id="progressBar"></div></div>
-      <div id="stage" aria-label="cTMT aim training area" tabindex="0"></div>
+      <div id="stage" aria-label="cTMT mouse trajectory research area" tabindex="0"></div>
     </div>
 
     <div class="panel">
-      <div class="kicker">LIVE HUD</div>
+      <div class="kicker">LIVE MEASUREMENT</div>
       <div class="stats">
-        <div class="stat"><span class="small">NEXT OBJECTIVE</span><b id="nextTarget">-</b></div>
-        <div class="stat"><span class="small">TARGETS SECURED</span><b id="correctCount">0 / 15</b></div>
+        <div class="stat"><span class="small">NEXT TARGET</span><b id="nextTarget">-</b></div>
+        <div class="stat"><span class="small">TARGETS REACHED</span><b id="correctCount">0 / 15</b></div>
         <div class="stat"><span class="small">TIME REMAINING</span><b id="remaining">25.00 s</b></div>
-        <div class="stat"><span class="small">AIM EVENTS</span><b id="eventCount">0</b></div>
+        <div class="stat"><span class="small">POINTER EVENTS</span><b id="eventCount">0</b></div>
       </div>
       <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
-      <div class="note">중앙 <b>⊕</b>를 클릭하면 trial이 시작됩니다. 이후 클릭하지 말고 조준점을 순서대로 Orb 안에 통과시키세요. 모든 Orb는 같은 중요도로 표시되며 다음 목표 위치를 따로 알려주지 않습니다.</div>
+      <div class="note">중앙 <b>⊕</b>를 클릭하면 trial이 시작됩니다. 이후 클릭하지 말고 마우스 포인터를 숫자·문자 목표에 규칙 순서대로 통과시키세요. 모든 목표는 같은 중요도로 표시되며 다음 목표 위치를 따로 강조하지 않습니다.</div>
       <div id="summaryBox" class="hidden">
         <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
-        <b style="color:var(--accent2)">ALL MISSIONS COMPLETE</b>
+        <b style="color:var(--accent2)">ALL TRIALS COMPLETE</b>
         <div class="small" id="summaryText"></div>
       </div>
     </div>
   </div>
 
   <div class="panel" style="margin-top:12px">
-    <div class="kicker" style="margin-bottom:7px">SYSTEM LOG // RECENT TRIAL</div>
+    <div class="kicker" style="margin-bottom:7px">RAW DATA // RECENT TRIAL</div>
     <pre id="preview">NO TRACKING DATA</pre>
   </div>
 </div>
