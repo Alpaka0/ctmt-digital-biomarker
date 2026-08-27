@@ -26,6 +26,6 @@
 <body>
 <div class="wrap">
   <div class="top"><div><div class="eyebrow">COGNITIVE MOLE // PAPER-INSPIRED MOUSE TASK</div><div class="title">순서 기억 두더지 게임</div><div class="sub">순차 처리 · 과제 전환 · 시각 탐색 · Mouse trajectory</div></div><div class="pill">● GAME MODE</div></div>
-  <div class="controls"><button id="start" class="btn primary">게임 시작</button><button id="next" class="btn secondary" disabled>ROUND B</button><button id="reset" class="btn danger">RESET</button><button id="send" class="btn secondary" disabled>결과 보내기</button></div>
+  <div class="controls"><button id="start" class="btn primary">게임 시작</button><button id="next" class="btn secondary" disabled>ROUND B</button><button id="reset" class="btn danger">RESET</button><button id="send" class="btn secondary" disabled>리포트 보기</button></div>
   <div class="hud"><div class="box"><span>ROUND</span><b id="round">STANDBY</b></div><div class="box"><span>정답</span><b id="hits">0 / 15</b></div><div class="box"><span>오선택 / MISS</span><b id="errors">0 / 0</b></div><div class="box"><span>남은 시간</span><b id="time">45.00 s</b></div></div>
   <div id="range">
