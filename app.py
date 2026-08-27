@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 from full_feature_extractor import extract_103_features
 from predictor import predict_research_score
 
-st.set_page_config(page_title="Cognitive Aim", page_icon="🎯", layout="wide")
+st.set_page_config(page_title="Cognitive Mole", page_icon="🧠", layout="wide")
 ROOT = Path(__file__).parent
 FEATURE_COLUMNS = json.loads((ROOT / "model_feature_columns.json").read_text(encoding="utf-8"))
 MODEL_META = json.loads((ROOT / "deployment_model_metadata.json").read_text(encoding="utf-8"))
@@ -28,23 +28,23 @@ def load_static_component(component_name, folder_name):
     return components.declare_component(component_name, path=str(runtime_dir))
 
 
-aim_component = load_static_component("cognitive_aim_component_v1", "aim_component_parts")
+mole_component = load_static_component("cognitive_mole_component_v2", "aim_component_parts")
 ctmt_component = load_static_component("ctmt_mouse_component_v2", "ctmt_component_parts")
 
 st.markdown("""
 <style>
-:root{--ink:#07111f;--cyan:#1fd7c5;--mint:#73ffd2;--line:#d7e4ea}
+:root{--green:#4fae58;--green-dark:#245b2b;--green-soft:#f2faee;--yellow:#ffd85e;--line:#d8e8d3;--text:#243127;--muted:#6d786f}
 .block-container{max-width:1180px;padding-top:1.45rem;padding-bottom:3rem}
-.hero{position:relative;overflow:hidden;padding:30px 32px;border:1px solid #18364a;border-radius:22px;background:linear-gradient(135deg,#07111f,#0d2334 58%,#12354a);margin:6px 0 20px;color:white}
-.hero:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0 5px,rgba(255,255,255,.018) 6px);pointer-events:none}
-.kicker{font-size:12px;font-weight:900;letter-spacing:.14em;color:#73ffd2;text-transform:uppercase}
-.hero h1{font-size:40px;letter-spacing:-.045em;margin:7px 0 8px;color:#f7fcff}
-.hero p{font-size:15px;line-height:1.7;color:#b9cbd6;max-width:900px;margin:0}
-.mission-strip{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 0}.mission-chip{border:1px solid #2b5368;background:rgba(10,31,47,.72);border-radius:999px;padding:7px 11px;font-size:11px;font-weight:850;letter-spacing:.05em;color:#d8f6ef}
-.operator{display:flex;gap:14px;align-items:center;border:1px solid #cde6e2;border-radius:17px;padding:15px 17px;background:#f4fbfa;margin:10px 0 18px}.operator-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#0d2334;font-size:26px;flex:0 0 48px}.operator .name{font-size:11px;font-weight:900;letter-spacing:.08em;color:#0b756c;text-transform:uppercase}.operator .msg{font-size:14px;line-height:1.55;color:#344054;margin-top:3px}
-.card{border:1px solid #dbe6eb;border-radius:17px;padding:17px 18px;background:white;height:100%}.card .small{font-size:11px;font-weight:900;color:#0b756c;letter-spacing:.08em;text-transform:uppercase}.card .big{font-size:27px;font-weight:950;color:#172033;margin:4px 0}.card .desc{font-size:13px;color:#667085;line-height:1.5}
+.hero{position:relative;overflow:hidden;padding:30px 32px;border:1px solid #cfe5c9;border-radius:22px;background:linear-gradient(135deg,#eff9e9,#fafff7 58%,#f4fbe9);margin:6px 0 20px;color:var(--text);box-shadow:0 10px 28px rgba(62,108,55,.08)}
+.hero:after{content:"";position:absolute;right:-30px;bottom:-65px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,#dff1c8 0,#ecf7df 45%,transparent 68%);pointer-events:none}
+.kicker{font-size:12px;font-weight:900;letter-spacing:.14em;color:#3d8d47;text-transform:uppercase}
+.hero h1{font-size:40px;letter-spacing:-.045em;margin:7px 0 8px;color:#1f4726}
+.hero p{font-size:15px;line-height:1.7;color:#5d6c60;max-width:920px;margin:0}
+.mission-strip{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 0}.mission-chip{border:1px solid #aad7a8;background:rgba(255,255,255,.78);border-radius:999px;padding:7px 11px;font-size:11px;font-weight:850;letter-spacing:.05em;color:#367b3e}
+.operator{display:flex;gap:14px;align-items:center;border:1px solid #d4e8d0;border-radius:17px;padding:15px 17px;background:#f6fbf3;margin:10px 0 18px}.operator-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#e4f3db;font-size:25px;flex:0 0 48px}.operator .name{font-size:11px;font-weight:900;letter-spacing:.08em;color:#3b8a43;text-transform:uppercase}.operator .msg{font-size:14px;line-height:1.55;color:#435046;margin-top:3px}
+.card{border:1px solid #dce9d8;border-radius:17px;padding:17px 18px;background:white;height:100%}.card .small{font-size:11px;font-weight:900;color:#3d8d47;letter-spacing:.08em;text-transform:uppercase}.card .big{font-size:25px;font-weight:950;color:#26352a;margin:4px 0}.card .desc{font-size:13px;color:#68736a;line-height:1.5}
 .score{border:1px solid #9adbd2;background:linear-gradient(145deg,#effbf8,#f8fcff);border-radius:22px;padding:24px}.score .label{font-size:12px;font-weight:900;letter-spacing:.06em;color:#0b756c;text-transform:uppercase}.score .number{font-size:52px;font-weight:950;color:#087f72;letter-spacing:-.05em;line-height:1.05;margin:6px 0}.score .desc{font-size:12px;color:#667085;line-height:1.5}
-.notice{border-left:4px solid #1ba899;background:#f4fbfa;border-radius:9px;padding:13px 15px;color:#475467;font-size:13px;line-height:1.55;margin-top:16px}.summary-card{border:1px solid #b9e1dc;background:#f4fbfa;border-radius:16px;padding:17px 19px;margin:14px 0 18px}.summary-card .eyebrow{font-size:11px;font-weight:900;letter-spacing:.08em;color:#0b756c;margin-bottom:6px;text-transform:uppercase}.summary-card .headline{font-size:19px;font-weight:850;color:#172033;line-height:1.45}.summary-card .sub{font-size:12px;color:#667085;line-height:1.5;margin-top:7px}.section-tag{font-size:12px;font-weight:900;letter-spacing:.1em;color:#0b756c;text-transform:uppercase;margin-bottom:2px}
+.notice{border-left:4px solid #59ad5f;background:#f5fbf2;border-radius:9px;padding:13px 15px;color:#526057;font-size:13px;line-height:1.55;margin-top:16px}.summary-card{border:1px solid #b9e1dc;background:#f4fbfa;border-radius:16px;padding:17px 19px;margin:14px 0 18px}.summary-card .eyebrow{font-size:11px;font-weight:900;letter-spacing:.08em;color:#0b756c;margin-bottom:6px;text-transform:uppercase}.summary-card .headline{font-size:19px;font-weight:850;color:#172033;line-height:1.45}.summary-card .sub{font-size:12px;color:#667085;line-height:1.5;margin-top:7px}.section-tag{font-size:12px;font-weight:900;letter-spacing:.1em;color:#3d8d47;text-transform:uppercase;margin-bottom:2px}
 div[data-testid="stMetric"]{border:1px solid #dbe6eb;border-radius:15px;padding:14px;background:#fff}
 </style>
 """, unsafe_allow_html=True)
@@ -59,22 +59,17 @@ def percentile(name, value):
         if ux and x <= ux[-1]:
             up[-1] = max(up[-1], p)
         else:
-            ux.append(x)
-            up.append(p)
+            ux.append(x); up.append(p)
     if len(ux) == 1:
         return 50.0
     return float(np.interp(value, np.array(ux), np.array(up), left=0, right=100))
 
 
 def fmt(name, value):
-    if name == "non_cut_correct_targets_touches_PART_B":
-        return f"{value:.2f} / 15"
-    if name == "is_valid_sum_B":
-        return f"{value:.0f}%"
-    if name == "non_cut_rt_PART_B":
-        return f"{value/1000:.2f} s"
-    if name == "max_duration_PART_B":
-        return f"{value:.3f} s"
+    if name == "non_cut_correct_targets_touches_PART_B": return f"{value:.2f} / 15"
+    if name == "is_valid_sum_B": return f"{value:.0f}%"
+    if name == "non_cut_rt_PART_B": return f"{value/1000:.2f} s"
+    if name == "max_duration_PART_B": return f"{value:.3f} s"
     return f"{value:.3f}"
 
 
@@ -92,99 +87,83 @@ def build_one_line_summary(features):
     if p_rt >= 75: burdens.append("반응 지연")
     if p_hes >= 75: burdens.append("망설임")
     if p_trans >= 75: burdens.append("행동 전환 증가")
-    if len(strengths) >= 2 and not burdens:
-        return "정확성과 수행 안정성이 높게 나타났고, 전환 과제에서도 비교적 안정적인 수행 패턴이 관찰되었습니다."
-    if len(burdens) >= 2 and not strengths:
-        return f"전환 과제에서 {', '.join(burdens[:2])} 특성이 상대적으로 두드러진 행동 패턴이 관찰되었습니다."
-    if strengths and burdens:
-        return f"{', '.join(strengths[:2])}은 비교적 높게 나타났지만, {', '.join(burdens[:2])} 특성도 함께 관찰되었습니다."
-    if strengths:
-        return f"{', '.join(strengths[:2])} 지표가 연구표본에서 상대적으로 높은 위치에 나타났습니다."
-    if burdens:
-        return f"{', '.join(burdens[:2])} 특성이 연구표본에서 상대적으로 높은 위치에 나타났습니다."
+    if len(strengths) >= 2 and not burdens: return "정확성과 수행 안정성이 높게 나타났고, 전환 과제에서도 비교적 안정적인 수행 패턴이 관찰되었습니다."
+    if len(burdens) >= 2 and not strengths: return f"전환 과제에서 {', '.join(burdens[:2])} 특성이 상대적으로 두드러진 행동 패턴이 관찰되었습니다."
+    if strengths and burdens: return f"{', '.join(strengths[:2])}은 비교적 높게 나타났지만, {', '.join(burdens[:2])} 특성도 함께 관찰되었습니다."
+    if strengths: return f"{', '.join(strengths[:2])} 지표가 연구표본에서 상대적으로 높은 위치에 나타났습니다."
+    if burdens: return f"{', '.join(burdens[:2])} 특성이 연구표본에서 상대적으로 높은 위치에 나타났습니다."
     return "핵심 인지행동 지표가 연구표본의 중앙 구간과 대체로 유사한 패턴으로 나타났습니다."
 
 
-def aim_round_stats(r):
+def mole_round_stats(r):
     clicks = r.get("clicks", [])
     correct = [c for c in clicks if c.get("correct")]
     mean_rt = float(np.mean([c.get("reaction_ms", np.nan) for c in correct])) if correct else np.nan
     pts = r.get("pointer_events", [])
-    distance = 0.0
-    for a, b in zip(pts[:-1], pts[1:]):
-        distance += float(np.hypot(b["x_norm"] - a["x_norm"], b["y_norm"] - a["y_norm"]))
-    return {
-        "part": r.get("part"),
-        "correct": r.get("correct_hits", 0),
-        "wrong": r.get("wrong_target_clicks", 0),
-        "miss": r.get("miss_clicks", 0),
-        "duration_s": r.get("duration_ms", 0) / 1000,
-        "mean_rt_ms": mean_rt,
-        "trajectory_distance_norm": distance,
-    }
+    distance = sum(float(np.hypot(b["x_norm"] - a["x_norm"], b["y_norm"] - a["y_norm"])) for a, b in zip(pts[:-1], pts[1:]))
+    return {"part":r.get("part"),"correct":r.get("correct_hits",0),"wrong":r.get("wrong_target_clicks",0),"miss":r.get("miss_clicks",0),"duration_s":r.get("duration_ms",0)/1000,"mean_rt_ms":mean_rt,"trajectory_distance_norm":distance}
 
 
 st.markdown("""
 <div class="hero">
-  <div class="kicker">Cognitive Aim // Game-based Mouse Biomarker</div>
-  <h1>FPS형 인지행동 Aim 미션</h1>
-  <p>두 개의 훈련 타깃 중 올바른 숫자·문자를 선택해 조준하고 클릭합니다. 정답 타깃이 제거되면 다음 타깃이 새 위치에 등장하며, 전 과정의 마우스 궤적·반응시간·오선택을 기록합니다.</p>
-  <div class="mission-strip"><span class="mission-chip">2 TARGET ROLLING</span><span class="mission-chip">AIM + CLICK</span><span class="mission-chip">SEQUENCE / SWITCHING</span><span class="mission-chip">MOUSE TRAJECTORY</span></div>
+  <div class="kicker">COGNITIVE MOLE // PAPER-INSPIRED MOUSE TASK</div>
+  <h1>순서 기억 두더지 게임</h1>
+  <p>순차 처리와 과제 전환 규칙을 바탕으로 구성한 게임형 인지행동 과제입니다. 올바른 순서의 두더지를 선택하는 과정에서 마우스 궤적, 반응시간, 정확성, 오선택 패턴을 기록합니다.</p>
+  <div class="mission-strip"><span class="mission-chip">RANDOM HOLES</span><span class="mission-chip">CLICK TASK</span><span class="mission-chip">SEQUENCE / SWITCHING</span><span class="mission-chip">MOUSE TRAJECTORY</span></div>
 </div>
 """, unsafe_allow_html=True)
 
-tab_intro, tab_aim, tab_research, tab_result = st.tabs(["01 BRIEFING", "02 COGNITIVE AIM", "03 RESEARCH cTMT", "04 RESEARCH REPORT"])
+tab_intro, tab_mole, tab_research, tab_result = st.tabs(["01 BRIEFING", "02 COGNITIVE MOLE", "03 RESEARCH cTMT", "04 RESEARCH REPORT"])
 
 with tab_intro:
     st.markdown("""
-    <div class="operator"><div class="operator-avatar">🎯</div><div><div class="name">Mission Concept</div><div class="msg">서비스 모드에서는 두 타깃을 동시에 제시하고 Aim + Click 행동을 측정합니다. 기존 논문 기반 cTMT는 별도의 Research Mode로 보존해 기술 검증 근거와 서비스 확장을 분리합니다.</div></div></div>
+    <div class="operator"><div class="operator-avatar">🧠</div><div><div class="name">Service Concept</div><div class="msg">선행연구의 cTMT에서 사용된 순차 처리, 과제 전환, 마우스 궤적 측정 개념을 두더지 게임형 상호작용으로 확장했습니다. 기존 cTMT 검증 모드는 별도로 유지합니다.</div></div></div>
     """, unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     cards = [
-        (c1, "Round A", "Sequential Aim", "1 → 2 → 3 순서로 두 타깃 중 올바른 훈련 타깃을 선택합니다."),
-        (c2, "Round B", "Switching Aim", "1 → A → 2 → B처럼 숫자와 문자를 번갈아 선택합니다."),
-        (c3, "Behavior", "Aim + Click", "마우스 궤적, 반응시간, 오선택, miss, 이동거리를 기록합니다."),
+        (c1, "Round A", "Sequential Processing", "1 → 2 → 3 순서에 따라 올바른 두더지를 찾아 클릭합니다."),
+        (c2, "Round B", "Task Switching", "1 → A → 2 → B처럼 숫자와 문자를 번갈아 선택합니다."),
+        (c3, "Behavior", "Mouse Trajectory", "이동 궤적, 반응시간, 오선택, MISS, 이동거리를 기록합니다."),
     ]
     for col, small, big, desc in cards:
         with col:
             st.markdown(f'<div class="card"><div class="small">{small}</div><div class="big">{big}</div><div class="desc">{desc}</div></div>', unsafe_allow_html=True)
-    st.markdown('<div class="notice"><b>연구 범위</b><br>Cognitive Aim은 기존 cTMT를 그대로 재현한 검사가 아니라, cTMT의 순차 처리와 전환 규칙을 FPS형 상호작용으로 확장한 서비스 프로토타입입니다. 게임 모드 결과에는 기존 cTMT SVM을 적용하지 않습니다.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="notice"><b>연구 범위</b><br>Cognitive Mole은 기존 cTMT를 그대로 재현한 검사가 아니라, 선행연구의 순차 처리·과제 전환·mouse trajectory 개념을 게임형 상호작용으로 확장한 서비스 프로토타입입니다. 게임 결과에는 기존 cTMT SVM을 적용하지 않습니다.</div>', unsafe_allow_html=True)
 
-with tab_aim:
-    st.markdown('<div class="section-tag">SERVICE MODE // TWO-TARGET COGNITIVE AIM</div>', unsafe_allow_html=True)
-    st.subheader("Cognitive Aim Mission")
-    st.caption("항상 2개의 훈련용 타깃이 보입니다. 올바른 코드의 머리를 조준하고 클릭하면 해당 타깃이 사라지고 다음 코드가 새 위치에 등장합니다.")
-    aim_data = aim_component(key="cognitive_aim_v1", default=None)
-    if aim_data:
-        st.session_state["aim_session"] = aim_data
-    aim_pack = st.session_state.get("aim_session")
-    if aim_pack and aim_pack.get("completed"):
-        st.markdown("### AFTER ACTION REPORT // GAME MODE")
-        summary = aim_pack.get("summary", {})
-        rounds = [aim_round_stats(r) for r in aim_pack.get("rounds", [])]
+with tab_mole:
+    st.markdown('<div class="section-tag">SERVICE MODE // COGNITIVE MOLE</div>', unsafe_allow_html=True)
+    st.subheader("순서 기억 두더지 게임")
+    st.caption("매 순간 현재 정답, 다음 후보, 방해 두더지가 서로 다른 구멍에 등장합니다. 규칙에 맞는 두더지를 찾아 망치로 클릭하세요.")
+    mole_data = mole_component(key="cognitive_mole_v2", default=None)
+    if mole_data:
+        st.session_state["mole_session"] = mole_data
+    mole_pack = st.session_state.get("mole_session")
+    if mole_pack and mole_pack.get("completed"):
+        st.markdown("### 게임형 인지행동 리포트")
+        summary = mole_pack.get("summary", {})
+        rounds = [mole_round_stats(r) for r in mole_pack.get("rounds", [])]
         rmap = {r["part"]: r for r in rounds}
         a, b = rmap.get("A", {}), rmap.get("B", {})
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Target Accuracy", f"{summary.get('accuracy', 0)*100:.1f}%")
-        c2.metric("Correct Hits", f"{summary.get('correct_hits', 0)} / 30")
-        c3.metric("Wrong Target", summary.get("wrong_target_clicks", 0))
-        c4.metric("Miss Click", summary.get("miss_clicks", 0))
+        c1.metric("게임 정확도", f"{summary.get('accuracy', 0)*100:.1f}%")
+        c2.metric("정답", f"{summary.get('correct_hits', 0)} / 30")
+        c3.metric("오선택", summary.get("wrong_target_clicks", 0))
+        c4.metric("MISS", summary.get("miss_clicks", 0))
         d1, d2, d3 = st.columns(3)
-        rt_a = a.get("mean_rt_ms", np.nan)
-        rt_b = b.get("mean_rt_ms", np.nan)
-        d1.metric("Round A Mean RT", "-" if np.isnan(rt_a) else f"{rt_a/1000:.2f} s")
-        d2.metric("Round B Mean RT", "-" if np.isnan(rt_b) else f"{rt_b/1000:.2f} s")
+        rt_a, rt_b = a.get("mean_rt_ms", np.nan), b.get("mean_rt_ms", np.nan)
+        d1.metric("Round A 평균 반응시간", "-" if np.isnan(rt_a) else f"{rt_a/1000:.2f} s")
+        d2.metric("Round B 평균 반응시간", "-" if np.isnan(rt_b) else f"{rt_b/1000:.2f} s")
         switch_cost = rt_b - rt_a if not np.isnan(rt_a) and not np.isnan(rt_b) else np.nan
-        d3.metric("Switching Cost", "-" if np.isnan(switch_cost) else f"{switch_cost/1000:+.2f} s")
+        d3.metric("전환 비용", "-" if np.isnan(switch_cost) else f"{switch_cost/1000:+.2f} s")
         if rounds:
-            st.dataframe(pd.DataFrame(rounds).rename(columns={"part":"Round","correct":"정답","wrong":"오선택","miss":"Miss","duration_s":"수행시간(s)","mean_rt_ms":"평균 반응시간(ms)","trajectory_distance_norm":"정규화 이동거리"}), use_container_width=True, hide_index=True)
-        st.markdown('<div class="notice"><b>게임형 행동 리포트</b><br>이 결과는 새로운 Cognitive Aim 과제의 수행 특성을 요약한 값입니다. 현재 단계에서는 MCI 또는 인지장애를 판정하지 않으며 기존 cTMT SVM 점수와 동일하게 해석하지 않습니다.</div>', unsafe_allow_html=True)
-        st.download_button("COGNITIVE AIM JSON 다운로드", data=json.dumps(aim_pack, ensure_ascii=False, indent=2).encode("utf-8"), file_name=f"{aim_pack.get('session_id','cognitive_aim')}.json", mime="application/json")
+            st.dataframe(pd.DataFrame(rounds).rename(columns={"part":"Round","correct":"정답","wrong":"오선택","miss":"MISS","duration_s":"수행시간(s)","mean_rt_ms":"평균 반응시간(ms)","trajectory_distance_norm":"정규화 이동거리"}), use_container_width=True, hide_index=True)
+        st.markdown('<div class="notice"><b>해석 범위</b><br>이 결과는 Cognitive Mole 게임 수행 중 나타난 행동 특성을 요약한 값입니다. MCI 또는 인지장애를 판정하지 않으며 기존 cTMT SVM 결과와 동일하게 해석하지 않습니다.</div>', unsafe_allow_html=True)
+        st.download_button("COGNITIVE MOLE JSON 다운로드", data=json.dumps(mole_pack, ensure_ascii=False, indent=2).encode("utf-8"), file_name=f"{mole_pack.get('session_id','cognitive_mole')}.json", mime="application/json")
 
 with tab_research:
     st.markdown('<div class="section-tag">VALIDATION MODE // ORIGINAL cTMT PIPELINE</div>', unsafe_allow_html=True)
     st.subheader("Research cTMT")
-    st.caption("선행연구 기반 103-feature extraction과 SVM 검증을 위한 연구 모드입니다. 서비스형 Cognitive Aim과 데이터 파이프라인을 분리합니다.")
+    st.caption("선행연구 기반 103-feature extraction과 SVM 검증을 위한 연구 모드입니다. 서비스형 Cognitive Mole과 데이터 파이프라인을 분리합니다.")
     with st.expander("RESEARCH MODE RULES", expanded=False):
         st.markdown("- Part A: `1 → 2 → 3 → ...`\n- Part B: `1 → A → 2 → B → ...`\n- Training A/B + 분석 20 trials\n- 각 trial 최대 25초\n- 목표는 클릭하지 않고 포인터로 통과")
     session_data = ctmt_component(key="ctmt_step12", default=None)
@@ -207,8 +186,7 @@ with tab_result:
     if not pack:
         st.info("먼저 **03 RESEARCH cTMT**를 완료하고 분석 데이터를 전송해주세요.")
     else:
-        extracted = pack["extracted"]
-        pred = pack["prediction"]
+        extracted, pred = pack["extracted"], pack["prediction"]
         f = extracted["features"]
         score = pred["research_probability_mci_pattern"] * 100
         one_line_summary = build_one_line_summary(f)
