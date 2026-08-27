@@ -68,11 +68,11 @@
     };
 
     renderFixation();
-    const missionNo=Math.max(0,currentTrialIndex-1);
+    const trialNo=Math.max(0,currentTrialIndex-1);
     trialLabel.textContent=meta.is_practice
-      ? `TRAINING MISSION // TYPE ${meta.part}`
-      : `MISSION ${String(missionNo).padStart(2,'0')} / 20 // TYPE ${meta.part}`;
-    instruction.textContent='중앙 ⊕를 클릭해 TRACKING을 초기화합니다.';
+      ? `PRACTICE TRIAL // TYPE ${meta.part}`
+      : `TRIAL ${String(trialNo).padStart(2,'0')} / 20 // TYPE ${meta.part}`;
+    instruction.textContent='중앙 ⊕를 클릭해 TRACKING을 시작합니다.';
     status.textContent='STANDBY';
     status.className='small';
     nextTargetEl.textContent='-';
@@ -125,9 +125,9 @@
     delete clean.nextIndex;
     session.trials.push(clean);
 
-    status.textContent=reason==='completed'?'MISSION CLEAR':'TIME LIMIT';
+    status.textContent=reason==='completed'?'TRIAL COMPLETE':'TIME LIMIT';
     status.className=reason==='completed'?'small ok':'small warn';
-    instruction.textContent=`TARGET ${clean.correct_count}/15 · ${clean.is_valid?'ANALYSIS READY':'8개 미만 / INVALID'}`;
+    instruction.textContent=`REACHED ${clean.correct_count}/15 · ${clean.is_valid?'ANALYSIS READY':'8개 미만 / INVALID'}`;
     preview.textContent=JSON.stringify(clean,null,2);
 
     if(currentTrialIndex<plan.length-1){
@@ -183,7 +183,7 @@
     const analysis=session.trials.filter(t=>!t.is_practice);
     const valid=analysis.filter(t=>t.is_valid).length;
     const totalEvents=session.trials.reduce((a,t)=>a+t.events.length,0);
-    summaryText.textContent=`20 missions · valid ${valid} · tracking events ${totalEvents.toLocaleString()}`;
+    summaryText.textContent=`20 trials · valid ${valid} · tracking events ${totalEvents.toLocaleString()}`;
   }
 
   function resetAll(){
@@ -191,5 +191,5 @@
     cancelAnimationFrame(rafTimer);
     session=null;plan=[];current=null;currentTrialIndex=-1;
     stage.innerHTML='';
-    trialLabel.textContent='MISSION STANDBY';instruction.textContent='MISSION START를 눌러주세요.';
+    trialLabel.textContent='RESEARCH STANDBY';instruction.textContent='START SESSION을 눌러주세요.';
     status.textContent='READY';status.cl
