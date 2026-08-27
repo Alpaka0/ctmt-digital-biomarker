@@ -1,4 +1,7 @@
-istractorActor);setTimeout(()=>setActor(distractorActor,distractorLabel(),'distractor'),115)}
+function expected(){return seq()[round.idx]}
+function updateHud(){hitsEl.textContent=round.correct_hits+' / 15';errorsEl.textContent=round.wrong_target_clicks+' / '+round.miss_clicks}
+function initMoles(){hideAll();recentHoles=[];currentActor=actors[0];previewActor=actors[1];distractorActor=actors[2];setActor(currentActor,seq()[0],'current');setActor(previewActor,seq()[1],'preview');setActor(distractorActor,distractorLabel(),'distractor');round.nextIdx=2;round.currentActivatedAt=rel()}
+function refreshDistractor(){hideActor(distractorActor);setTimeout(()=>setActor(distractorActor,distractorLabel(),'distractor'),115)}
 function advance(hitActor,t){round.idx+=1;if(round.idx>=seq().length){finishRound('completed');return}currentActor=previewActor;currentActor.role='current';currentActor.badge.className='badge current';round.currentActivatedAt=t;previewActor=hitActor;if(round.nextIdx<seq().length){hideActor(previewActor);const label=seq()[round.nextIdx++];setTimeout(()=>setActor(previewActor,label,'preview'),125)}else{hideActor(previewActor)}refreshDistractor()}
 function actorAt(p){let chosen=null,best=Infinity;for(const a of actors){if(!a.visible||!a.hole)continue;const cx=a.hole.x*p.w,cy=(a.hole.y-a.hole.scale*.34)*p.h;const rx=a.hole.scale*p.w*.47*HIT_PAD,ry=a.hole.scale*p.h*.54*HIT_PAD;const d=((p.px-cx)/rx)**2+((p.py-cy)/ry)**2;if(d<=1&&d<best){best=d;chosen=a}}return chosen}
 function animateHit(actor,kind){actor.el.classList.remove('bonk','wrong');void actor.el.offsetWidth;actor.el.classList.add(kind);setTimeout(()=>actor.el.classList.remove(kind),190)}
