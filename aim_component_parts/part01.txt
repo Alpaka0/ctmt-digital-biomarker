@@ -1,1 +1,50 @@
-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
+v>
+    <div id="actor0" class="moleActor hidden"><img class="moleImg" src="" data-asset="mole_hole" alt=""></div><div id="badge0" class="badge hidden"></div>
+    <div id="actor1" class="moleActor hidden"><img class="moleImg" src="" data-asset="mole_hole" alt=""></div><div id="badge1" class="badge hidden"></div>
+    <div id="actor2" class="moleActor hidden"><img class="moleImg" src="" data-asset="mole_hole" alt=""></div><div id="badge2" class="badge hidden"></div>
+    <img id="hammer" src="" data-asset="hammer" alt="">
+    <div id="toast" class="toast">BONK!</div>
+    <div id="message" class="message"><img data-asset="mole" src="" alt=""><h2>COGNITIVE MOLE</h2><p><strong>ROUND A</strong>는 숫자를 순서대로, <strong>ROUND B</strong>는 숫자와 문자를 번갈아 찾습니다.<br>매 순간 3마리 중 올바른 두더지를 찾아 망치로 클릭하세요.</p><div class="paperMap"><b>논문 연결:</b> sequential processing · task switching · response time · mouse trajectory</div></div>
+  </div>
+  <div class="bottom"><div id="rule" class="rule">ROUND A: 1 → 2 → 3 → … → 15</div><div>정답 강조 · 위치 안내 없음</div></div>
+</div>
+<script>
+function post(type,data){window.parent.postMessage(Object.assign({isStreamlitMessage:true,type:type},data),"*")}
+function resize(){post("streamlit:setFrameHeight",{height:document.documentElement.scrollHeight})}
+function sendData(v){post("streamlit:setComponentValue",{value:v})}
+window.addEventListener("message",e=>{if(e.data&&e.data.type==="streamlit:render")setTimeout(resize,0)});
+post("streamlit:componentReady",{apiVersion:1});setTimeout(resize,0);
+(()=>{
+const ASSETS={board:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_board.webp',mole:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole.webp',hammer:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/hammer.webp',mole_hole:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_hole.webp'};
+const range=document.getElementById('range'),hammer=document.getElementById('hammer'),toast=document.getElementById('toast'),message=document.getElementById('message');
+const startBtn=document.getElementById('start'),nextBtn=document.getElementById('next'),resetBtn=document.getElementById('reset'),sendBtn=document.getElementById('send');
+const roundEl=document.getElementById('round'),hitsEl=document.getElementById('hits'),errorsEl=document.getElementById('errors'),timeEl=document.getElementById('time'),ruleEl=document.getElementById('rule');
+range.style.backgroundImage=`url(${ASSETS.board})`;document.querySelectorAll('[data-asset]').forEach(el=>{el.src=ASSETS[el.dataset.asset]||''});
+const seqA=Array.from({length:15},(_,i)=>String(i+1));
+const seqB=['1','A','2','B','3','C','4','D','5','E','6','F','7','G','8'];
+const LIMIT=45000,HIT_PAD=1.0;
+const HOLES=[
+ {id:'H1',x:.286,y:.382,scale:.125},{id:'H2',x:.486,y:.382,scale:.125},{id:'H3',x:.699,y:.382,scale:.125},
+ {id:'H4',x:.192,y:.535,scale:.142},{id:'H5',x:.386,y:.535,scale:.142},{id:'H6',x:.600,y:.535,scale:.142},{id:'H7',x:.786,y:.535,scale:.142},
+ {id:'H8',x:.287,y:.716,scale:.158},{id:'H9',x:.486,y:.716,scale:.158},{id:'H10',x:.699,y:.716,scale:.158}
+];
+const actors=[0,1,2].map(i=>({id:i,el:document.getElementById('actor'+i),badge:document.getElementById('badge'+i),label:null,role:null,hole:null,visible:false,spawn:0}));
+let session=null,round=null,raf=null,lastMove=-Infinity,currentActor=null,previewActor=null,distractorActor=null,recentHoles=[];
+const uid=()=>"mole_"+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'_'+Math.random().toString(36).slice(2,8);
+const seq=()=>round&&round.part==='B'?seqB:seqA;
+const rel=()=>round?performance.now()-round.t0:0;
+function pointer(e){const r=range.getBoundingClientRect();return{x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height)),px:e.clientX-r.left,py:e.clientY-r.top,w:r.width,h:r.height}}
+function showHammer(p){hammer.style.display='block';hammer.style.left=(p.x*100)+'%';hammer.style.top=(p.y*100)+'%'}
+function swing(){hammer.classList.remove('hammerSwing');void hammer.offsetWidth;hammer.classList.add('hammerSwing')}
+function pop(text,ok=true){toast.textContent=text;toast.style.color=ok?'#fffef2':'#fff0ef';toast.classList.remove('show');void toast.offsetWidth;toast.classList.add('show')}
+function occupied(except=null){return actors.filter(a=>a!==except&&a.visible&&a.hole).map(a=>a.hole.id)}
+function chooseHole(actor){let pool=HOLES.filter(h=>!occupied(actor).includes(h.id)&&h.id!==(actor.hole&&actor.hole.id)&&!recentHoles.slice(-2).includes(h.id));if(!pool.length)pool=HOLES.filter(h=>!occupied(actor).includes(h.id));const h=pool[Math.floor(Math.random()*pool.length)]||HOLES[0];recentHoles.push(h.id);if(recentHoles.length>5)recentHoles.shift();return h}
+function positionActor(actor,hole){actor.hole=hole;actor.el.style.left=(hole.x*100)+'%';actor.el.style.top=(hole.y*100)+'%';actor.el.style.width=(hole.scale*100)+'%';actor.badge.style.left=(hole.x*100)+'%';actor.badge.style.top=((hole.y-hole.scale*.72)*100)+'%'}
+function setActor(actor,label,role,hole=null){const h=hole||chooseHole(actor);positionActor(actor,h);actor.label=label;actor.role=role;actor.spawn=rel();actor.visible=true;actor.badge.textContent=label;actor.badge.className='badge '+role;actor.el.className='moleActor pop';if(round&&round.spawns)round.spawns.push({t_ms:+actor.spawn.toFixed(3),code:label,role:role,hole_id:h.id,x_norm:h.x,y_norm:h.y,scale:h.scale})}
+function hideActor(actor){actor.visible=false;actor.label=null;actor.role=null;actor.el.className='moleActor hidden';actor.badge.className='badge hidden'}
+function hideAll(){actors.forEach(hideActor)}
+function distractorLabel(){const blocked=new Set(actors.filter(a=>a.visible&&a.role!=='distractor').map(a=>a.label));let pool=seq().filter(v=>!blocked.has(v));if(!pool.length)pool=round.part==='B'?['X','Y','Z']:['3','7','11'];return pool[Math.floor(Math.random()*pool.length)]}
+function expected(){return seq()[round.idx]}
+function updateHud(){hitsEl.textContent=round.correct_hits+' / 15';errorsEl.textContent=round.wrong_target_clicks+' / '+round.miss_clicks}
+function initMoles(){hideAll();recentHoles=[];currentActor=actors[0];previewActor=actors[1];distractorActor=actors[2];setActor(currentActor,seq()[0],'current');setActor(previewActor,seq()[1],'preview');setActor(distractorActor,distractorLabel(),'distractor');round.nextIdx=2;round.currentActivatedAt=rel()}
+function refreshDistractor(){hideActor(d
