@@ -15,22 +15,12 @@ function sendData(v){post("streamlit:setComponentValue",{value:v})}
 window.addEventListener("message",e=>{if(e.data&&e.data.type==="streamlit:render")setTimeout(resize,0)});
 post("streamlit:componentReady",{apiVersion:1});setTimeout(resize,0);
 (async()=>{
-const ASSET_B64={
- board:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_board_hq.b64',
- mole:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_hq.b64',
- hammer:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/hammer_hq.b64',
- mole_hole:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_hole_hq.b64'
+const ASSETS={
+ board:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_board.png',
+ mole:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole.png',
+ hammer:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/hammer.png',
+ mole_hole:'https://raw.githubusercontent.com/Alpaka0/ctmt-digital-biomarker/main/mole_assets/mole_hole.png'
 };
-async function loadAssets(){
- const entries=await Promise.all(Object.entries(ASSET_B64).map(async([k,u])=>{
-   const r=await fetch(u,{cache:'no-store'});
-   if(!r.ok)throw new Error(`asset ${k} ${r.status}`);
-   const b64=(await r.text()).trim();
-   return [k,`data:image/webp;base64,${b64}`];
- }));
- return Object.fromEntries(entries);
-}
-const ASSETS=await loadAssets();
 const range=document.getElementById('range'),hammer=document.getElementById('hammer'),toast=document.getElementById('toast'),message=document.getElementById('message');
 const startBtn=document.getElementById('start'),nextBtn=document.getElementById('next'),resetBtn=document.getElementById('reset'),sendBtn=document.getElementById('send');
 const roundEl=document.getElementById('round'),hitsEl=document.getElementById('hits'),errorsEl=document.getElementById('errors'),timeEl=document.getElementById('time'),ruleEl=document.getElementById('rule');
