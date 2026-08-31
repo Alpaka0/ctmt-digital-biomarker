@@ -45,6 +45,8 @@ st.markdown("""
 .card{border:1px solid #dce9d8;border-radius:17px;padding:17px 18px;background:white;height:100%}.card .small{font-size:11px;font-weight:900;color:#3d8d47;letter-spacing:.08em;text-transform:uppercase}.card .big{font-size:25px;font-weight:950;color:#26352a;margin:4px 0}.card .desc{font-size:13px;color:#68736a;line-height:1.5}
 .notice{border-left:4px solid #59ad5f;background:#f5fbf2;border-radius:9px;padding:13px 15px;color:#526057;font-size:13px;line-height:1.55;margin-top:16px}.summary-card{border:1px solid #b9e1dc;background:#f4fbfa;border-radius:16px;padding:17px 19px;margin:14px 0 18px}.summary-card .eyebrow{font-size:11px;font-weight:900;letter-spacing:.08em;color:#0b756c;margin-bottom:6px;text-transform:uppercase}.summary-card .headline{font-size:19px;font-weight:850;color:#172033;line-height:1.45}.summary-card .sub{font-size:12px;color:#667085;line-height:1.5;margin-top:7px}.section-tag{font-size:12px;font-weight:900;letter-spacing:.1em;color:#3d8d47;text-transform:uppercase;margin-bottom:2px}
 div[data-testid="stMetric"]{border:1px solid #dbe6eb;border-radius:15px;padding:14px;background:#fff}.traj-title{font-size:12px;font-weight:900;color:#385b3d;margin:4px 0 6px}.benchmark{border:1px solid #cfe4ca;background:#fbfefa;border-radius:17px;padding:16px 18px;margin:18px 0}.benchmark-title{font-size:12px;font-weight:950;letter-spacing:.09em;color:#327b3c;margin-bottom:10px}.benchmark-note{font-size:11px;line-height:1.55;color:#667268;margin-top:10px}
+.radar-card{border:1px solid #dde2ef;border-radius:18px;background:#fff;padding:8px 10px 4px;margin:8px 0 8px;box-shadow:0 5px 18px rgba(62,72,108,.05)}
+.radar-legend{display:flex;gap:18px;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#55606b;margin:3px 0 0}.radar-dot{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}.radar-a{background:#6f8fae}.radar-b{background:#8358d8}
 </style>
 """, unsafe_allow_html=True)
 
@@ -248,6 +250,146 @@ def _signed(v, digits=0, suffix=""):
     return f"{v:+.{digits}f}{suffix}"
 
 
+RADAR_DIMENSIONS = [
+    ("completion", "완료도"),
+    ("accuracy", "선택 정확도"),
+    ("rt_stability", "반응 안정성"),
+    ("time_efficiency", "시간 효율"),
+    ("path_efficiency", "경로 효율"),
+    ("wrong_control", "오선택 억제"),
+    ("miss_control", "MISS 억제"),
+]
+
+
+def _score_pct(value):
+    if not np.isfinite(_safe_float(value)):
+        return np.nan
+    return float(np.clip(value, 0.0, 100.0))
+
+
+def mole_performance_profile(stats):
+    correct = _safe_float(stats.get("correct_hits"))
+    accuracy = _safe_float(stats.get("accuracy"))
+    mean_rt = _safe_float(stats.get("mean_rt_ms"))
+    std_rt = _safe_float(stats.get("std_rt_ms"))
+    duration = _safe_float(stats.get("duration_ms"))
+    path_eff = _safe_float(stats.get("path_efficiency"))
+    wrong = _safe_float(stats.get("wrong_target_clicks"))
+    miss = _safe_float(stats.get("miss_clicks"))
+
+    rt_stability = np.nan
+    if np.isfinite(mean_rt) and mean_rt > 0 and np.isfinite(std_rt):
+        rt_stability = 100.0 * (1.0 - min(std_rt / mean_rt, 1.0))
+
+    return {
+        "completion": _score_pct(correct / 15.0 * 100.0) if np.isfinite(correct) else np.nan,
+        "accuracy": _score_pct(accuracy * 100.0) if np.isfinite(accuracy) else np.nan,
+        "rt_stability": _score_pct(rt_stability),
+        "time_efficiency": _score_pct((1.0 - min(duration / 25000.0, 1.0)) * 100.0) if np.isfinite(duration) else np.nan,
+        "path_efficiency": _score_pct(path_eff * 100.0) if np.isfinite(path_eff) else np.nan,
+        "wrong_control": _score_pct((1.0 - min(wrong / 15.0, 1.0)) * 100.0) if np.isfinite(wrong) else np.nan,
+        "miss_control": _score_pct((1.0 - min(miss / 15.0, 1.0)) * 100.0) if np.isfinite(miss) else np.nan,
+    }
+
+
+def mole_radar_svg(a_stats, b_stats):
+    a_profile = mole_performance_profile(a_stats)
+    b_profile = mole_performance_profile(b_stats)
+    n = len(RADAR_DIMENSIONS)
+    cx, cy, radius = 420.0, 245.0, 172.0
+    angles = [-np.pi / 2 + (2 * np.pi * i / n) for i in range(n)]
+
+    def point(angle, value, extra=0.0):
+        scale = (value / 100.0) if np.isfinite(value) else 0.0
+        r = radius * scale + extra
+        return cx + r * np.cos(angle), cy + r * np.sin(angle)
+
+    def polygon(profile, level=None):
+        pts = []
+        for (key, _), angle in zip(RADAR_DIMENSIONS, angles):
+            value = level if level is not None else _safe_float(profile.get(key), 0.0)
+            x, y = point(angle, value)
+            pts.append(f"{x:.1f},{y:.1f}")
+        return " ".join(pts)
+
+    parts = [
+        '<div class="radar-card">',
+        '<div class="radar-legend"><span><i class="radar-dot radar-a"></i>기준 평균 · Round A × 10</span>'
+        '<span><i class="radar-dot radar-b"></i>내 결과 · Round B × 10</span></div>',
+        '<svg viewBox="0 0 840 500" width="100%" role="img" aria-label="Round A 평균과 Round B 수행 비교 레이더 차트" style="display:block;max-height:520px">',
+    ]
+
+    for level in (20, 40, 60, 80, 100):
+        parts.append(
+            f'<polygon points="{polygon(a_profile, level=level)}" fill="none" stroke="#d9dee7" stroke-width="1"/>'
+        )
+
+    for angle in angles:
+        x, y = point(angle, 100)
+        parts.append(f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{x:.1f}" y2="{y:.1f}" stroke="#d7dce5" stroke-width="1"/>')
+
+    parts.append(f'<polygon points="{polygon(a_profile)}" fill="#6f8fae" fill-opacity="0.22" stroke="#5d7893" stroke-width="3" stroke-linejoin="round"/>')
+    parts.append(f'<polygon points="{polygon(b_profile)}" fill="#8358d8" fill-opacity="0.24" stroke="#7043c7" stroke-width="3" stroke-linejoin="round"/>')
+
+    for profile, color in ((a_profile, "#5d7893"), (b_profile, "#7043c7")):
+        for (key, _), angle in zip(RADAR_DIMENSIONS, angles):
+            value = _safe_float(profile.get(key))
+            if not np.isfinite(value):
+                continue
+            x, y = point(angle, value)
+            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.5" fill="#fff" stroke="{color}" stroke-width="3"/>')
+
+    for (key, label), angle in zip(RADAR_DIMENSIONS, angles):
+        lx = cx + (radius + 42) * np.cos(angle)
+        ly = cy + (radius + 42) * np.sin(angle)
+        anchor = "middle"
+        if lx < cx - 25:
+            anchor = "end"
+        elif lx > cx + 25:
+            anchor = "start"
+        parts.append(
+            f'<text x="{lx:.1f}" y="{ly:.1f}" text-anchor="{anchor}" dominant-baseline="middle" '
+            f'font-size="14" font-weight="800" fill="#44505c">{label}</text>'
+        )
+
+    parts.append('<text x="420" y="472" text-anchor="middle" font-size="11" fill="#7b8490">시각화 점수 0–100 · 바깥쪽일수록 해당 수행 지표가 상대적으로 양호</text>')
+    parts.append('</svg></div>')
+    return "".join(parts)
+
+
+def radar_raw_table(a, b):
+    rows = [
+        ("평균 정답 수 / trial", _safe_float(a.get("correct_hits")), _safe_float(b.get("correct_hits")), "count"),
+        ("선택 정확도", _safe_float(a.get("accuracy")), _safe_float(b.get("accuracy")), "pct"),
+        ("중앙 반응시간", _safe_float(a.get("median_rt_ms")), _safe_float(b.get("median_rt_ms")), "ms"),
+        ("반응시간 표준편차", _safe_float(a.get("std_rt_ms")), _safe_float(b.get("std_rt_ms")), "ms"),
+        ("평균 수행시간", _safe_float(a.get("duration_ms")), _safe_float(b.get("duration_ms")), "sec"),
+        ("경로 효율", _safe_float(a.get("path_efficiency")), _safe_float(b.get("path_efficiency")), "pct"),
+        ("평균 오선택 / trial", _safe_float(a.get("wrong_target_clicks")), _safe_float(b.get("wrong_target_clicks")), "count"),
+        ("평균 MISS / trial", _safe_float(a.get("miss_clicks")), _safe_float(b.get("miss_clicks")), "count"),
+    ]
+
+    def fmt(v, kind):
+        if not np.isfinite(v):
+            return "-"
+        if kind == "pct":
+            return f"{v*100:.1f}%"
+        if kind == "ms":
+            return f"{v:.1f} ms"
+        if kind == "sec":
+            return f"{v/1000:.2f} s"
+        return f"{v:.1f}"
+
+    return pd.DataFrame([
+        {
+            "지표": label,
+            "기준 평균 · Round A × 10": fmt(av, kind),
+            "내 결과 · Round B × 10": fmt(bv, kind),
+        }
+        for label, av, bv, kind in rows
+    ])
+
+
 def detailed_feature_table(a, b):
     specs = [
         ("correct_hits", "평균 정답 수 / trial", "count"),
@@ -443,6 +585,14 @@ with tab_mole:
             unsafe_allow_html=True,
         )
 
+        st.markdown("#### 기준 평균 vs 내 전환 수행 · Radar Profile")
+        st.markdown(mole_radar_svg(a, b), unsafe_allow_html=True)
+        st.caption(
+            "현재 '기준 평균'은 집단 평균이 아니라 동일 사용자의 Round A 10-trial 평균입니다. "
+            "Round B 10-trial 실제 수행을 다른 색으로 겹쳐 비교합니다. 집단 기준 데이터가 확보되면 동일 구조에 normative average를 대체 적용할 수 있습니다."
+        )
+        st.dataframe(radar_raw_table(a, b), use_container_width=True, hide_index=True)
+
         st.markdown("#### 20 Trials 수행 결과")
         trial_df = trial_summary_table(mole_pack)
         st.dataframe(trial_df, use_container_width=True, hide_index=True)
@@ -485,6 +635,11 @@ with tab_mole:
             "cognitive_mole_summary": summary,
             "round_A_10trial_mean_features": a,
             "round_B_10trial_mean_features": b,
+            "radar_profile": {
+                "reference_type": "within-session Round A 10-trial mean",
+                "round_A_scores": mole_performance_profile(a),
+                "round_B_scores": mole_performance_profile(b),
+            },
             "trial_features": [mole_round_stats(r) for r in raw_trials],
             "research_benchmark": {
                 "original_input_features": MODEL_META["input_features"],
