@@ -47,6 +47,10 @@ st.markdown("""
 div[data-testid="stMetric"]{border:1px solid #dbe6eb;border-radius:15px;padding:14px;background:#fff}.traj-title{font-size:12px;font-weight:900;color:#385b3d;margin:4px 0 6px}.benchmark{border:1px solid #cfe4ca;background:#fbfefa;border-radius:17px;padding:16px 18px;margin:18px 0}.benchmark-title{font-size:12px;font-weight:950;letter-spacing:.09em;color:#327b3c;margin-bottom:10px}.benchmark-note{font-size:11px;line-height:1.55;color:#667268;margin-top:10px}
 .radar-card{border:1px solid #dde2ef;border-radius:18px;background:#fff;padding:8px 10px 4px;margin:8px 0 8px;box-shadow:0 5px 18px rgba(62,72,108,.05)}
 .radar-legend{display:flex;gap:18px;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#55606b;margin:3px 0 0}.radar-dot{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}.radar-a{background:#6f8fae}.radar-b{background:#8358d8}
+.mci-result{border-radius:20px;padding:22px 24px;margin:10px 0 12px;border:1px solid #dce3e8;box-shadow:0 7px 22px rgba(38,48,60,.06)}
+.mci-result.stable{background:#f3fbf4;border-color:#b9dfbf}.mci-result.watch{background:#fff9e9;border-color:#ead38c}.mci-result.check{background:#fff2ef;border-color:#efb5aa}
+.mci-result .mci-top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.mci-result .mci-kicker{font-size:11px;font-weight:950;letter-spacing:.1em;color:#667085}.mci-result .mci-badge{display:inline-block;border-radius:999px;padding:6px 11px;font-size:11px;font-weight:950;background:#fff;border:1px solid rgba(70,80,90,.18)}
+.mci-result h3{font-size:26px;line-height:1.35;margin:9px 0 7px;color:#263238}.mci-result p{font-size:13px;line-height:1.65;color:#59636c;margin:0}.mci-action{margin-top:13px;padding-top:12px;border-top:1px solid rgba(70,80,90,.12);font-size:13px;font-weight:850;color:#344054}.mci-evidence{margin-top:9px;font-size:11px;color:#667085;line-height:1.55}.mci-prototype{font-size:11px;color:#7a8490;margin:8px 0 16px}
 </style>
 """, unsafe_allow_html=True)
 
@@ -390,6 +394,124 @@ def radar_raw_table(a, b):
     ])
 
 
+def mci_signal_screening(a, b):
+    a_profile = mole_performance_profile(a)
+    b_profile = mole_performance_profile(b)
+    gaps = []
+    for key, _ in RADAR_DIMENSIONS:
+        av = _safe_float(a_profile.get(key))
+        bv = _safe_float(b_profile.get(key))
+        if np.isfinite(av) and np.isfinite(bv):
+            gaps.append(bv - av)
+
+    mean_gap = float(np.mean(gaps)) if gaps else np.nan
+    declined_dimensions = int(sum(g <= -10.0 for g in gaps))
+
+    rt_a = _safe_float(a.get("median_rt_ms"))
+    rt_b = _safe_float(b.get("median_rt_ms"))
+    rt_pct = ((rt_b - rt_a) / rt_a * 100.0) if np.isfinite(rt_a) and rt_a > 0 and np.isfinite(rt_b) else np.nan
+
+    acc_a = _safe_float(a.get("accuracy"))
+    acc_b = _safe_float(b.get("accuracy"))
+    accuracy_delta_pp = (acc_b - acc_a) * 100.0 if np.isfinite(acc_a) and np.isfinite(acc_b) else np.nan
+
+    err_a = _safe_float(a.get("error_count"))
+    err_b = _safe_float(b.get("error_count"))
+    error_delta = err_b - err_a if np.isfinite(err_a) and np.isfinite(err_b) else np.nan
+
+    path_a = _safe_float(a.get("path_efficiency"))
+    path_b = _safe_float(b.get("path_efficiency"))
+    path_delta_pp = (path_b - path_a) * 100.0 if np.isfinite(path_a) and np.isfinite(path_b) else np.nan
+
+    points = 0
+    if np.isfinite(rt_pct):
+        points += 2 if rt_pct >= 25 else (1 if rt_pct >= 10 else 0)
+    if np.isfinite(error_delta):
+        points += 2 if error_delta >= 1.5 else (1 if error_delta >= 0.5 else 0)
+    if np.isfinite(accuracy_delta_pp):
+        points += 2 if accuracy_delta_pp <= -8 else (1 if accuracy_delta_pp <= -3 else 0)
+    if np.isfinite(path_delta_pp):
+        points += 2 if path_delta_pp <= -10 else (1 if path_delta_pp <= -5 else 0)
+    points += 2 if declined_dimensions >= 4 else (1 if declined_dimensions >= 2 else 0)
+
+    if points >= 6:
+        level = "확인 필요"
+        css_class = "check"
+        headline = "MCI와 관련될 수 있는 행동 변화 신호가 비교적 크게 관찰되었습니다."
+        action = "신경과·기억장애 클리닉 등 전문 의료기관에서 표준 인지검사와 전문 평가 상담을 권장합니다."
+    elif points >= 3:
+        level = "관찰"
+        css_class = "watch"
+        headline = "MCI와 관련될 수 있는 일부 행동 변화 신호가 관찰되었습니다."
+        action = "동일한 조건으로 추적 재검을 권장하며, 변화가 반복되거나 일상 기능 저하가 느껴지면 전문 인지평가를 고려하세요."
+    else:
+        level = "안정"
+        css_class = "stable"
+        headline = "현재 수행에서 뚜렷한 MCI 관련 행동 위험 신호는 낮게 관찰되었습니다."
+        action = "현재 결과를 기준선으로 보관하고 정기적으로 추적해 변화 여부를 확인하는 것을 권장합니다."
+
+    return {
+        "level": level,
+        "css_class": css_class,
+        "headline": headline,
+        "action": action,
+        "prototype_points": int(points),
+        "declined_dimensions": declined_dimensions,
+        "mean_profile_gap": mean_gap,
+        "rt_change_pct": rt_pct,
+        "accuracy_change_pp": accuracy_delta_pp,
+        "error_change_per_trial": error_delta,
+        "path_efficiency_change_pp": path_delta_pp,
+        "basis": "within-session Round A vs Round B rule-based prototype",
+        "clinical_probability": False,
+    }
+
+
+def mci_result_html(result):
+    evidence = []
+    if np.isfinite(_safe_float(result.get("rt_change_pct"))):
+        evidence.append(f"반응시간 {result['rt_change_pct']:+.1f}%")
+    if np.isfinite(_safe_float(result.get("accuracy_change_pp"))):
+        evidence.append(f"정확도 {result['accuracy_change_pp']:+.1f}%p")
+    if np.isfinite(_safe_float(result.get("error_change_per_trial"))):
+        evidence.append(f"오류 {result['error_change_per_trial']:+.1f}회/trial")
+    if np.isfinite(_safe_float(result.get("path_efficiency_change_pp"))):
+        evidence.append(f"경로효율 {result['path_efficiency_change_pp']:+.1f}%p")
+    evidence.append(f"저하 지표 {result.get('declined_dimensions', 0)}개")
+    evidence_text = " · ".join(evidence)
+
+    return (
+        f'<div class="mci-result {result["css_class"]}">'
+        '<div class="mci-top"><div class="mci-kicker">MCI RISK-SIGNAL SCREENING // PROTOTYPE</div>'
+        f'<span class="mci-badge">{result["level"]}</span></div>'
+        f'<h3>{result["headline"]}</h3>'
+        '<p>순차 수행 대비 교대 수행에서 나타난 반응시간, 정확도, 오류, 경로 효율과 다차원 행동 변화를 종합한 서비스용 선별 결과입니다.</p>'
+        f'<div class="mci-action">다음 단계 · {result["action"]}</div>'
+        f'<div class="mci-evidence">관찰 근거 · {evidence_text}</div>'
+        '</div>'
+    )
+
+
+def mci_level_table():
+    return pd.DataFrame([
+        {
+            "선별 결과": "안정",
+            "한 줄 결과": "MCI 관련 행동 위험 신호가 낮게 관찰되었습니다.",
+            "권장 행동": "현재 결과를 기준선으로 저장하고 정기 추적",
+        },
+        {
+            "선별 결과": "관찰",
+            "한 줄 결과": "MCI와 관련될 수 있는 일부 행동 변화 신호가 관찰되었습니다.",
+            "권장 행동": "추적 재검 후 변화가 반복되면 전문 인지평가 고려",
+        },
+        {
+            "선별 결과": "확인 필요",
+            "한 줄 결과": "MCI와 관련될 수 있는 행동 변화 신호가 비교적 크게 관찰되었습니다.",
+            "권장 행동": "신경과·기억장애 클리닉 등 전문 의료기관 인지평가 권장",
+        },
+    ])
+
+
 def detailed_feature_table(a, b):
     specs = [
         ("correct_hits", "평균 정답 수 / trial", "count"),
@@ -593,6 +715,13 @@ with tab_mole:
         )
         st.dataframe(radar_raw_table(a, b), use_container_width=True, hide_index=True)
 
+        screening_result = mci_signal_screening(a, b)
+        st.markdown("### MCI 위험 신호 예측 결과")
+        st.markdown(mci_result_html(screening_result), unsafe_allow_html=True)
+        st.markdown('<div class="mci-prototype">※ 현재 결과는 Cognitive Mole 내부 A/B 수행 차이에 기반한 서비스 프로토타입 선별 규칙입니다. MCI 진단, 임상 확률 또는 의료적 확진 결과가 아닙니다.</div>', unsafe_allow_html=True)
+        st.markdown("#### 결과 단계 및 후속 안내")
+        st.dataframe(mci_level_table(), use_container_width=True, hide_index=True)
+
         st.markdown("#### 20 Trials 수행 결과")
         trial_df = trial_summary_table(mole_pack)
         st.dataframe(trial_df, use_container_width=True, hide_index=True)
@@ -640,6 +769,7 @@ with tab_mole:
                 "round_A_scores": mole_performance_profile(a),
                 "round_B_scores": mole_performance_profile(b),
             },
+            "mci_risk_signal_screening": screening_result,
             "trial_features": [mole_round_stats(r) for r in raw_trials],
             "research_benchmark": {
                 "original_input_features": MODEL_META["input_features"],
