@@ -106,7 +106,9 @@ def _motion_features(events):
     if len(rows) < 2:
         return {
             "mean_speed": np.nan, "std_speed": np.nan, "peak_speed": np.nan,
-            "mean_acceleration": np.nan, "std_acceleration": np.nan, "peak_abs_acceleration": np.nan,
+            "mean_acceleration": np.nan, "std_acceleration": np.nan, "peak_acceleration": np.nan,
+            "mean_abs_acceleration": np.nan, "std_abs_acceleration": np.nan, "peak_abs_acceleration": np.nan,
+            "mean_negative_acceleration": np.nan, "std_negative_acceleration": np.nan, "peak_negative_acceleration": np.nan,
             "mean_move_interval_ms": np.nan, "max_move_interval_ms": np.nan,
             "x_span": np.nan, "y_span": np.nan,
         }
@@ -124,13 +126,21 @@ def _motion_features(events):
             acc.append((speeds[i] - speeds[i-1]) / dt)
     xs = [r[1] for r in rows]
     ys = [r[2] for r in rows]
+    abs_acc = np.abs(acc) if acc else []
+    neg_acc = [v for v in acc if v < 0]
     return {
         "mean_speed": float(np.mean(speeds)) if speeds else np.nan,
         "std_speed": float(np.std(speeds)) if speeds else np.nan,
         "peak_speed": float(np.max(speeds)) if speeds else np.nan,
         "mean_acceleration": float(np.mean(acc)) if acc else np.nan,
         "std_acceleration": float(np.std(acc)) if acc else np.nan,
-        "peak_abs_acceleration": float(np.max(np.abs(acc))) if acc else np.nan,
+        "peak_acceleration": float(np.max(acc)) if acc else np.nan,
+        "mean_abs_acceleration": float(np.mean(abs_acc)) if len(abs_acc) else np.nan,
+        "std_abs_acceleration": float(np.std(abs_acc)) if len(abs_acc) else np.nan,
+        "peak_abs_acceleration": float(np.max(abs_acc)) if len(abs_acc) else np.nan,
+        "mean_negative_acceleration": float(np.mean(neg_acc)) if neg_acc else np.nan,
+        "std_negative_acceleration": float(np.std(neg_acc)) if neg_acc else np.nan,
+        "peak_negative_acceleration": float(np.min(neg_acc)) if neg_acc else np.nan,
         "mean_move_interval_ms": float(np.mean(dts)*1000) if dts else np.nan,
         "max_move_interval_ms": float(np.max(dts)*1000) if dts else np.nan,
         "x_span": float(max(xs)-min(xs)),
@@ -166,6 +176,12 @@ def mole_round_stats(r):
     target_jumps = [float(np.hypot(b[0]-a[0], b[1]-a[1])) for a, b in zip(target_pts[:-1], target_pts[1:])]
     click_times = [_safe_float(c.get("t_ms")) for c in correct if np.isfinite(_safe_float(c.get("t_ms")))]
     click_intervals = [b-a for a, b in zip(click_times[:-1], click_times[1:]) if b > a]
+    rt_to_8_s = click_times[7] / 1000.0 if len(click_times) >= 8 else np.nan
+    path_efficiency = _path_efficiency(r)
+    distance_difference_proxy = (
+        distance * (1.0 - path_efficiency)
+        if np.isfinite(path_efficiency) else np.nan
+    )
     result = {
         "part": r.get("part"),
         "stage_index": int(r.get("stage_index", 0) or 0),
@@ -185,7 +201,9 @@ def mole_round_stats(r):
         "q25_rt_ms": float(np.percentile(rts, 25)) if rts else np.nan,
         "q75_rt_ms": float(np.percentile(rts, 75)) if rts else np.nan,
         "trajectory_distance_norm": distance,
-        "path_efficiency": _path_efficiency(r),
+        "path_efficiency": path_efficiency,
+        "rt_to_8_s": rt_to_8_s,
+        "distance_difference_proxy": distance_difference_proxy,
         "pointer_events": len(pts),
         "mean_correct_interval_ms": float(np.mean(click_intervals)) if click_intervals else np.nan,
         "median_correct_interval_ms": float(np.median(click_intervals)) if click_intervals else np.nan,
@@ -206,7 +224,9 @@ def aggregate_mole_trials(raw_trials, part):
         "duration_ms", "mean_rt_ms", "median_rt_ms", "std_rt_ms", "min_rt_ms", "max_rt_ms",
         "q25_rt_ms", "q75_rt_ms", "trajectory_distance_norm", "path_efficiency", "pointer_events",
         "mean_speed", "std_speed", "peak_speed", "mean_acceleration", "std_acceleration",
-        "peak_abs_acceleration", "mean_move_interval_ms", "max_move_interval_ms",
+        "peak_acceleration", "mean_abs_acceleration", "std_abs_acceleration", "peak_abs_acceleration",
+        "mean_negative_acceleration", "std_negative_acceleration", "peak_negative_acceleration",
+        "rt_to_8_s", "distance_difference_proxy", "mean_move_interval_ms", "max_move_interval_ms",
         "mean_correct_interval_ms", "median_correct_interval_ms", "target_jump_mean_norm",
         "target_jump_total_norm", "x_span", "y_span", "unique_holes",
     ]
@@ -392,6 +412,83 @@ def radar_raw_table(a, b):
         }
         for label, av, bv, kind in rows
     ])
+
+
+def build_mole_research_model_proxy(a, b):
+    """Project Cognitive Mole features into the reproduced cTMT SVM as an exploratory proxy.
+
+    Only features with a reasonably direct behavioral analogue are populated from Mole.
+    Original cTMT-only features remain NaN and are handled by the deployment pipeline's
+    training-mean SimpleImputer. The resulting score is not a validated clinical probability.
+    """
+    features = {c: np.nan for c in FEATURE_COLUMNS}
+    mapping = {
+        "distance_difference_from_ideal": "distance_difference_proxy",
+        "mean_abs_acceleration": "mean_abs_acceleration",
+        "mean_acceleration": "mean_acceleration",
+        "mean_negative_acceleration": "mean_negative_acceleration",
+        "mean_speed": "mean_speed",
+        "non_cut_correct_targets_touches": "correct_hits",
+        "non_cut_rt": "duration_ms",
+        "peak_abs_acceleration": "peak_abs_acceleration",
+        "peak_acceleration": "peak_acceleration",
+        "peak_negative_acceleration": "peak_negative_acceleration",
+        "peak_speed": "peak_speed",
+        "rt": "rt_to_8_s",
+        "std_abs_acceleration": "std_abs_acceleration",
+        "std_acceleration": "std_acceleration",
+        "std_negative_acceleration": "std_negative_acceleration",
+        "std_speed": "std_speed",
+        "total_distance": "trajectory_distance_norm",
+    }
+
+    for part, stats in (("A", a), ("B", b)):
+        for research_name, mole_name in mapping.items():
+            col = f"{research_name}_PART_{part}"
+            if col not in features:
+                continue
+            value = _safe_float(stats.get(mole_name))
+            if np.isfinite(value):
+                features[col] = float(value)
+
+    features["is_valid_sum_A"] = 100.0 * _safe_float(a.get("analysis_ready_trials"), 0.0) / 10.0
+    features["is_valid_sum_B"] = 100.0 * _safe_float(b.get("analysis_ready_trials"), 0.0) / 10.0
+
+    suffix = "_B_A_ratio"
+    for col in FEATURE_COLUMNS:
+        if not col.endswith(suffix):
+            continue
+        base = col[:-len(suffix)]
+        av = _safe_float(features.get(f"{base}_PART_A"))
+        bv = _safe_float(features.get(f"{base}_PART_B"))
+        if np.isfinite(av) and np.isfinite(bv) and av != 0:
+            features[col] = float(bv / av)
+
+    mapped = int(sum(np.isfinite(_safe_float(features.get(c))) for c in FEATURE_COLUMNS))
+    try:
+        prediction = predict_research_score(features)
+        return {
+            "available": True,
+            "score": float(prediction["research_probability_mci_pattern"]),
+            "model_class_at_default_threshold": int(prediction["model_class_at_default_threshold"]),
+            "mapped_features": mapped,
+            "total_features": len(FEATURE_COLUMNS),
+            "imputed_features": len(FEATURE_COLUMNS) - mapped,
+            "linkage_mode": "exploratory_research_model_proxy",
+            "clinical_probability": False,
+            "interpretation": "원 cTMT 재현 SVM에 Cognitive Mole 대응 Feature를 투영한 탐색적 참고점수",
+        }
+    except Exception as exc:
+        return {
+            "available": False,
+            "score": np.nan,
+            "mapped_features": mapped,
+            "total_features": len(FEATURE_COLUMNS),
+            "imputed_features": len(FEATURE_COLUMNS) - mapped,
+            "linkage_mode": "exploratory_research_model_proxy",
+            "clinical_probability": False,
+            "error": str(exc),
+        }
 
 
 def mci_signal_screening(a, b):
@@ -643,7 +740,7 @@ with tab_intro:
     for col, small, big, desc in cards:
         with col:
             st.markdown(f'<div class="card"><div class="small">{small}</div><div class="big">{big}</div><div class="desc">{desc}</div></div>', unsafe_allow_html=True)
-    st.markdown('<div class="notice"><b>연구 범위</b><br>반복 횟수는 원 cTMT 분석 구조와 맞춰 A 10 trials + B 10 trials로 구성했습니다. 다만 Cognitive Mole은 동적 두더지를 클릭하는 서비스형 과제이므로 원 연구의 pointer-through-target 데이터와 생성 방식이 동일하지 않습니다. 따라서 기존 103-feature SVM은 게임 데이터에 직접 적용하지 않고, 20-trial 반복 행동 Feature를 별도로 리포트합니다.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="notice"><b>연구 범위</b><br>반복 횟수는 원 cTMT 분석 구조와 맞춰 A 10 trials + B 10 trials로 구성했습니다. Cognitive Mole은 동적 두더지를 클릭하는 서비스형 과제라 원 연구와 상호작용 방식은 다르지만, 대응 가능한 mouse-behavior Feature를 원 103-feature 구조에 연결해 재현 SVM의 탐색적 참고점수까지 함께 제시합니다.</div>', unsafe_allow_html=True)
 
 with tab_mole:
     st.markdown('<div class="section-tag">SERVICE MODE // 20-TRIAL COGNITIVE MOLE</div>', unsafe_allow_html=True)
@@ -661,6 +758,7 @@ with tab_mole:
         b_trials = [r for r in raw_trials if r.get("part") == "B"]
         a = aggregate_mole_trials(raw_trials, "A")
         b = aggregate_mole_trials(raw_trials, "B")
+        research_model_proxy = build_mole_research_model_proxy(a, b)
 
         correct_hits = int(summary.get("correct_hits", 0))
         wrong = int(summary.get("wrong_target_clicks", 0))
@@ -718,7 +816,17 @@ with tab_mole:
         screening_result = mci_signal_screening(a, b)
         st.markdown("### MCI 위험 신호 예측 결과")
         st.markdown(mci_result_html(screening_result), unsafe_allow_html=True)
-        st.markdown('<div class="mci-prototype">※ 현재 결과는 Cognitive Mole 내부 A/B 수행 차이에 기반한 서비스 프로토타입 선별 규칙입니다. MCI 진단, 임상 확률 또는 의료적 확진 결과가 아닙니다.</div>', unsafe_allow_html=True)
+        if research_model_proxy.get("available"):
+            proxy_pct = research_model_proxy["score"] * 100.0
+            st.markdown(
+                f'<div class="mci-prototype"><b>논문 재현 SVM 기반 MCI 패턴 참고점수 · {proxy_pct:.1f}%</b><br>'
+                f'Cognitive Mole에서 대응 가능한 {research_model_proxy["mapped_features"]}/{research_model_proxy["total_features"]}개 Feature를 연결하고, '
+                '대응되지 않는 원 cTMT 전용 Feature는 재현 모델의 학습 평균으로 보완한 탐색적 proxy입니다. 임상적 MCI 확률이 아닙니다.</div>',
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown('<div class="mci-prototype">※ 논문 재현 SVM 탐색적 연계 점수는 이번 세션에서 산출되지 않았습니다.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="mci-prototype">※ 서비스 선별 결과는 Cognitive Mole 내부 A/B 수행 차이에 기반한 프로토타입 규칙이며, MCI 진단 또는 의료적 확진 결과가 아닙니다.</div>', unsafe_allow_html=True)
         st.markdown("#### 결과 단계 및 후속 안내")
         st.dataframe(mci_level_table(), use_container_width=True, hide_index=True)
 
@@ -746,8 +854,17 @@ with tab_mole:
         b1.metric("원 연구 입력 Feature", f"{MODEL_META['input_features']}")
         b2.metric("SVM 선택 Feature", f"{MODEL_META['selected_features']}")
         b3.metric("재현 Nested-CV AUC", f"{MODEL_META['official_reproduction_auc_nested_cv']:.3f}")
-        b4.metric("Mole SVM 출력", "미적용")
-        st.markdown('<div class="benchmark-note">Cognitive Mole도 이제 A 10 + B 10의 총 20-trial 반복 구조로 데이터를 수집하며, trial 단위 Feature를 계산한 뒤 A/B별로 집계합니다. 이는 원 cTMT의 반복 측정 분석 구조에 더 가깝게 맞춘 것입니다. 다만 원 연구는 고정 target을 포인터가 통과하는 프로토콜이고 Cognitive Mole은 랜덤 동적 target을 클릭하는 프로토콜이므로 동일한 103-feature 입력으로 간주할 수 없습니다. 기존 SVM은 연구 재현 근거로만 유지하며 게임 전용 모델은 별도 데이터 수집·학습·검증이 필요합니다.</div></div>', unsafe_allow_html=True)
+        proxy_value = "산출 불가"
+        if research_model_proxy.get("available"):
+            proxy_value = f"{research_model_proxy['score']*100:.1f}%"
+        b4.metric("Mole SVM 참고점수", proxy_value)
+        st.markdown(
+            f'<div class="benchmark-note">원 연구의 20-trial·103-feature·SVM 파이프라인을 재현한 뒤, Cognitive Mole에서도 A 10 + B 10 구조와 mouse trajectory를 유지했습니다. '
+            f'게임에서 원 연구와 직접 대응 가능한 {research_model_proxy.get("mapped_features", 0)}/{research_model_proxy.get("total_features", len(FEATURE_COLUMNS))}개 Feature를 103-feature 공간에 연결하고, '
+            '나머지 원 cTMT 전용 Feature는 재현 SVM pipeline의 학습 평균 imputation으로 보완해 탐색적 Research-model proxy를 산출합니다. '
+            '따라서 표시된 점수는 서비스 설계를 위한 연구모델 참고값이며, 원 논문의 AUC 0.670을 Cognitive Mole의 검증 성능이나 임상적 MCI 확률로 해석하지 않습니다.</div></div>',
+            unsafe_allow_html=True,
+        )
 
         with st.expander("클릭 이벤트 상세 로그", expanded=False):
             click_df = click_event_table(mole_pack)
@@ -756,7 +873,7 @@ with tab_mole:
             else:
                 st.info("클릭 이벤트가 없습니다.")
 
-        st.markdown('<div class="notice"><b>해석 범위</b><br>본 리포트는 20-trial Cognitive Mole 수행 중 나타난 반복 행동 특성을 요약합니다. 의료 진단이나 MCI/치매 판정을 제공하지 않으며 원 cTMT의 103-feature SVM 출력값과 동일하게 해석하지 않습니다.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="notice"><b>해석 범위</b><br>본 리포트는 20-trial Cognitive Mole 행동 특성과 원 논문 재현 SVM의 탐색적 proxy 연계를 함께 보여줍니다. 서비스 선별 결과와 SVM 참고점수 모두 의료 진단이나 MCI/치매 확진·임상 확률이 아니며, Cognitive Mole 자체 임상 검증을 위해서는 별도 표본으로 재학습·검증이 필요합니다.</div>', unsafe_allow_html=True)
 
         payload = {
             "session_id": mole_pack.get("session_id"),
@@ -770,13 +887,15 @@ with tab_mole:
                 "round_B_scores": mole_performance_profile(b),
             },
             "mci_risk_signal_screening": screening_result,
+            "mole_research_model_proxy": research_model_proxy,
             "trial_features": [mole_round_stats(r) for r in raw_trials],
             "research_benchmark": {
                 "original_input_features": MODEL_META["input_features"],
                 "original_selected_features": MODEL_META["selected_features"],
                 "original_nested_cv_auc": MODEL_META["official_reproduction_auc_nested_cv"],
-                "svm_applied_to_cognitive_mole": False,
-                "reason": "Cognitive Mole uses dynamic click-based targets rather than the original pointer-through-target cTMT protocol.",
+                "svm_linkage_mode": "exploratory_research_model_proxy",
+                "clinical_probability": False,
+                "reason": "Cognitive Mole maps compatible mouse-behavior features into the reproduced cTMT SVM; cTMT-only features are mean-imputed, so the output is exploratory rather than a validated Mole prediction.",
             },
             "raw_session": mole_pack,
         }
