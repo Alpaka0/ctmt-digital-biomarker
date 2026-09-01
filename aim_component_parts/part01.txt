@@ -4,7 +4,7 @@
     <div id="actor2" class="moleActor hidden"><img class="moleImg" src="" data-asset="mole_hole" alt=""></div><div id="badge2" class="badge hidden"></div>
     <img id="hammer" src="" data-asset="hammer" alt="">
     <div id="toast" class="toast">BONK!</div>
-    <div id="message" class="message"><img data-asset="mole" src="" alt=""><h2>COGNITIVE MOLE</h2><p><strong>ROUND A × 10</strong>과 <strong>ROUND B × 10</strong>, 총 20 trials를 진행합니다.<br>매 순간 3마리 중 올바른 두더지를 찾아 망치로 클릭하세요.</p><div class="paperMap"><b>측정:</b> repeated trials · response time · mouse trajectory · errors</div></div>
+    <div id="message" class="message"><img data-asset="mole" src="" alt=""><h2>뇌굴뇌굴</h2><p><strong>ROUND A × 10</strong>과 <strong>ROUND B × 10</strong>, 총 20 trials를 진행합니다.<br>매 순간 3마리 중 올바른 두더지를 찾아 망치로 클릭하세요.</p><div class="paperMap"><b>측정:</b> repeated trials · response time · mouse trajectory · errors</div></div>
   </div>
   <div class="bottom"><div id="rule" class="rule">ROUND A: 1 → 2 → 3 → … → 15</div><div>정답 강조 없음 · 위치 안내 없음</div></div>
 </div>
