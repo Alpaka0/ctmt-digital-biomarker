@@ -11,7 +11,7 @@ import streamlit.components.v1 as components
 from full_feature_extractor import extract_103_features  # noqa: F401
 from predictor import predict_research_score  # noqa: F401
 
-st.set_page_config(page_title="Cognitive Mole", page_icon="🧠", layout="wide")
+st.set_page_config(page_title="뇌굴뇌굴", page_icon="🧠", layout="wide")
 ROOT = Path(__file__).parent
 FEATURE_COLUMNS = json.loads((ROOT / "model_feature_columns.json").read_text(encoding="utf-8"))
 MODEL_META = json.loads((ROOT / "deployment_model_metadata.json").read_text(encoding="utf-8"))
@@ -415,7 +415,7 @@ def radar_raw_table(a, b):
 
 
 def build_mole_research_model_proxy(a, b):
-    """Project Cognitive Mole features into the reproduced cTMT SVM as an exploratory proxy.
+    """Project 뇌굴뇌굴 features into the reproduced cTMT SVM as an exploratory proxy.
 
     Only features with a reasonably direct behavioral analogue are populated from Mole.
     Original cTMT-only features remain NaN and are handled by the deployment pipeline's
@@ -476,7 +476,7 @@ def build_mole_research_model_proxy(a, b):
             "imputed_features": len(FEATURE_COLUMNS) - mapped,
             "linkage_mode": "exploratory_research_model_proxy",
             "clinical_probability": False,
-            "interpretation": "원 cTMT 재현 SVM에 Cognitive Mole 대응 Feature를 투영한 탐색적 참고점수",
+            "interpretation": "원 cTMT 재현 SVM에 뇌굴뇌굴 대응 Feature를 투영한 탐색적 참고점수",
         }
     except Exception as exc:
         return {
@@ -718,14 +718,14 @@ def click_event_table(mole_pack):
 
 st.markdown("""
 <div class="hero">
-  <div class="kicker">COGNITIVE MOLE // PAPER-INSPIRED MOUSE TASK</div>
-  <h1>순서 기억 두더지 게임</h1>
+  <div class="kicker">뇌굴뇌굴 // PAPER-INSPIRED MOUSE TASK</div>
+  <h1>뇌굴뇌굴</h1>
   <p>원 cTMT의 반복 측정 구조에 맞춰 Round A 10회와 Round B 10회, 총 20 trials를 수행합니다. 각 trial에서 마우스 궤적, 반응시간, 정확성, 오선택 패턴을 기록하고 A/B 반복 수행의 평균 차이를 분석합니다.</p>
   <div class="mission-strip"><span class="mission-chip">20 TRIALS</span><span class="mission-chip">A × 10 / B × 10</span><span class="mission-chip">25 SEC / TRIAL</span><span class="mission-chip">MOUSE TRAJECTORY</span></div>
 </div>
 """, unsafe_allow_html=True)
 
-tab_intro, tab_mole = st.tabs(["01 BRIEFING", "02 COGNITIVE MOLE"])
+tab_intro, tab_mole = st.tabs(["01 BRIEFING", "02 뇌굴뇌굴"])
 
 with tab_intro:
     st.markdown("""
@@ -740,11 +740,11 @@ with tab_intro:
     for col, small, big, desc in cards:
         with col:
             st.markdown(f'<div class="card"><div class="small">{small}</div><div class="big">{big}</div><div class="desc">{desc}</div></div>', unsafe_allow_html=True)
-    st.markdown('<div class="notice"><b>연구 범위</b><br>반복 횟수는 원 cTMT 분석 구조와 맞춰 A 10 trials + B 10 trials로 구성했습니다. Cognitive Mole은 동적 두더지를 클릭하는 서비스형 과제라 원 연구와 상호작용 방식은 다르지만, 대응 가능한 mouse-behavior Feature를 원 103-feature 구조에 연결해 재현 SVM의 탐색적 참고점수까지 함께 제시합니다.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="notice"><b>연구 범위</b><br>반복 횟수는 원 cTMT 분석 구조와 맞춰 A 10 trials + B 10 trials로 구성했습니다. 뇌굴뇌굴은 동적 두더지를 클릭하는 서비스형 과제라 원 연구와 상호작용 방식은 다르지만, 대응 가능한 mouse-behavior Feature를 원 103-feature 구조에 연결해 재현 SVM의 탐색적 참고점수까지 함께 제시합니다.</div>', unsafe_allow_html=True)
 
 with tab_mole:
-    st.markdown('<div class="section-tag">SERVICE MODE // 20-TRIAL COGNITIVE MOLE</div>', unsafe_allow_html=True)
-    st.subheader("순서 기억 두더지 게임")
+    st.markdown('<div class="section-tag">SERVICE MODE // 20-TRIAL 뇌굴뇌굴</div>', unsafe_allow_html=True)
+    st.subheader("뇌굴뇌굴")
     st.caption("A→B를 한 세트로 총 10세트(20 trials) 수행합니다. 각 trial은 최대 25초이며, 완료 후 화면 안내에 따라 다음 trial로 이동합니다.")
     mole_data = mole_component(key="cognitive_mole_v3", default=None)
     if mole_data:
@@ -774,7 +774,7 @@ with tab_mole:
         eff_a, eff_b = _safe_float(a.get("path_efficiency")), _safe_float(b.get("path_efficiency"))
         eff_delta = eff_b-eff_a if np.isfinite(eff_a) and np.isfinite(eff_b) else np.nan
 
-        st.markdown("### Cognitive Mole 20-Trial 통합 행동 리포트")
+        st.markdown("### 뇌굴뇌굴 20-Trial 통합 행동 리포트")
         c1, c2, c3, c4, c5 = st.columns(5)
         c1.metric("완료 Trials", f"{trials_done} / 20")
         c2.metric("과제 완료율", f"{completion_rate:.1f}%")
@@ -820,13 +820,13 @@ with tab_mole:
             proxy_pct = research_model_proxy["score"] * 100.0
             st.markdown(
                 f'<div class="mci-prototype"><b>논문 재현 SVM 기반 MCI 패턴 참고점수 · {proxy_pct:.1f}%</b><br>'
-                f'Cognitive Mole에서 대응 가능한 {research_model_proxy["mapped_features"]}/{research_model_proxy["total_features"]}개 Feature를 연결하고, '
+                f'뇌굴뇌굴에서 대응 가능한 {research_model_proxy["mapped_features"]}/{research_model_proxy["total_features"]}개 Feature를 연결하고, '
                 '대응되지 않는 원 cTMT 전용 Feature는 재현 모델의 학습 평균으로 보완한 탐색적 proxy입니다. 임상적 MCI 확률이 아닙니다.</div>',
                 unsafe_allow_html=True,
             )
         else:
             st.markdown('<div class="mci-prototype">※ 논문 재현 SVM 탐색적 연계 점수는 이번 세션에서 산출되지 않았습니다.</div>', unsafe_allow_html=True)
-        st.markdown('<div class="mci-prototype">※ 서비스 선별 결과는 Cognitive Mole 내부 A/B 수행 차이에 기반한 프로토타입 규칙이며, MCI 진단 또는 의료적 확진 결과가 아닙니다.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="mci-prototype">※ 서비스 선별 결과는 뇌굴뇌굴 내부 A/B 수행 차이에 기반한 프로토타입 규칙이며, MCI 진단 또는 의료적 확진 결과가 아닙니다.</div>', unsafe_allow_html=True)
         st.markdown("#### 결과 단계 및 후속 안내")
         st.dataframe(mci_level_table(), use_container_width=True, hide_index=True)
 
@@ -857,12 +857,12 @@ with tab_mole:
         proxy_value = "산출 불가"
         if research_model_proxy.get("available"):
             proxy_value = f"{research_model_proxy['score']*100:.1f}%"
-        b4.metric("Mole SVM 참고점수", proxy_value)
+        b4.metric("뇌굴뇌굴 SVM 참고점수", proxy_value)
         st.markdown(
-            f'<div class="benchmark-note">원 연구의 20-trial·103-feature·SVM 파이프라인을 재현한 뒤, Cognitive Mole에서도 A 10 + B 10 구조와 mouse trajectory를 유지했습니다. '
+            f'<div class="benchmark-note">원 연구의 20-trial·103-feature·SVM 파이프라인을 재현한 뒤, 뇌굴뇌굴에서도 A 10 + B 10 구조와 mouse trajectory를 유지했습니다. '
             f'게임에서 원 연구와 직접 대응 가능한 {research_model_proxy.get("mapped_features", 0)}/{research_model_proxy.get("total_features", len(FEATURE_COLUMNS))}개 Feature를 103-feature 공간에 연결하고, '
             '나머지 원 cTMT 전용 Feature는 재현 SVM pipeline의 학습 평균 imputation으로 보완해 탐색적 Research-model proxy를 산출합니다. '
-            '따라서 표시된 점수는 서비스 설계를 위한 연구모델 참고값이며, 원 논문의 AUC 0.670을 Cognitive Mole의 검증 성능이나 임상적 MCI 확률로 해석하지 않습니다.</div></div>',
+            '따라서 표시된 점수는 서비스 설계를 위한 연구모델 참고값이며, 원 논문의 AUC 0.670을 뇌굴뇌굴의 검증 성능이나 임상적 MCI 확률로 해석하지 않습니다.</div></div>',
             unsafe_allow_html=True,
         )
 
@@ -873,7 +873,7 @@ with tab_mole:
             else:
                 st.info("클릭 이벤트가 없습니다.")
 
-        st.markdown('<div class="notice"><b>해석 범위</b><br>본 리포트는 20-trial Cognitive Mole 행동 특성과 원 논문 재현 SVM의 탐색적 proxy 연계를 함께 보여줍니다. 서비스 선별 결과와 SVM 참고점수 모두 의료 진단이나 MCI/치매 확진·임상 확률이 아니며, Cognitive Mole 자체 임상 검증을 위해서는 별도 표본으로 재학습·검증이 필요합니다.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="notice"><b>해석 범위</b><br>본 리포트는 20-trial 뇌굴뇌굴 행동 특성과 원 논문 재현 SVM의 탐색적 proxy 연계를 함께 보여줍니다. 서비스 선별 결과와 SVM 참고점수 모두 의료 진단이나 MCI/치매 확진·임상 확률이 아니며, 뇌굴뇌굴 자체 임상 검증을 위해서는 별도 표본으로 재학습·검증이 필요합니다.</div>', unsafe_allow_html=True)
 
         payload = {
             "session_id": mole_pack.get("session_id"),
@@ -895,7 +895,7 @@ with tab_mole:
                 "original_nested_cv_auc": MODEL_META["official_reproduction_auc_nested_cv"],
                 "svm_linkage_mode": "exploratory_research_model_proxy",
                 "clinical_probability": False,
-                "reason": "Cognitive Mole maps compatible mouse-behavior features into the reproduced cTMT SVM; cTMT-only features are mean-imputed, so the output is exploratory rather than a validated Mole prediction.",
+                "reason": "뇌굴뇌굴 maps compatible mouse-behavior features into the reproduced cTMT SVM; cTMT-only features are mean-imputed, so the output is exploratory rather than a validated Mole prediction.",
             },
             "raw_session": mole_pack,
         }
