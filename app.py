@@ -328,8 +328,9 @@ def mole_change_profile(a, b):
     """Within-session A→B change profile used only for visualization.
 
     The radar shows change in the burden-increase direction. It is not a normal-control
-    comparison and does not use a diagnostic threshold. Scores use each metric's natural
-    range so that no unvalidated normative cut-off is introduced.
+    comparison and does not use a diagnostic threshold. Each dimension is normalized to
+    a visualization ceiling chosen only to make the within-session pattern readable.
+    These ceilings are not normative or clinical cut-offs.
     """
     rt_a = _safe_float(a.get("median_rt_ms"))
     rt_b = _safe_float(b.get("median_rt_ms"))
@@ -372,11 +373,11 @@ def mole_change_profile(a, b):
         return max(0.0, v) if np.isfinite(v) else np.nan
 
     scores = {
-        "rt_increase": _score_pct(positive(rt_change_pct)),
-        "accuracy_drop": _score_pct(positive(-accuracy_change_pp)) if np.isfinite(accuracy_change_pp) else np.nan,
-        "path_drop": _score_pct(positive(-path_change_pp)) if np.isfinite(path_change_pp) else np.nan,
-        "wrong_increase": _score_pct(positive(wrong_change) / 15.0 * 100.0) if np.isfinite(wrong_change) else np.nan,
-        "miss_increase": _score_pct(positive(miss_change) / 15.0 * 100.0) if np.isfinite(miss_change) else np.nan,
+        "rt_increase": _score_pct(positive(rt_change_pct) / 30.0 * 100.0),
+        "accuracy_drop": _score_pct(positive(-accuracy_change_pp) / 10.0 * 100.0) if np.isfinite(accuracy_change_pp) else np.nan,
+        "path_drop": _score_pct(positive(-path_change_pp) / 15.0 * 100.0) if np.isfinite(path_change_pp) else np.nan,
+        "wrong_increase": _score_pct(positive(wrong_change) / 2.0 * 100.0) if np.isfinite(wrong_change) else np.nan,
+        "miss_increase": _score_pct(positive(miss_change) / 1.0 * 100.0) if np.isfinite(miss_change) else np.nan,
     }
     return {"raw": raw, "scores": scores}
 
@@ -438,7 +439,7 @@ def mole_radar_svg(a_stats, b_stats):
             f'font-size="14" font-weight="800" fill="#44505c">{label}</text>'
         )
 
-    parts.append('<text x="420" y="472" text-anchor="middle" font-size="11" fill="#7b8490">0 = 부담 증가 방향의 변화 없음 · 바깥쪽일수록 A 대비 B에서 변화가 큼 · 정상/위험 기준 아님</text>')
+    parts.append('<text x="420" y="472" text-anchor="middle" font-size="11" fill="#7b8490">지표별 시각화 범위로 정규화 · 바깥쪽일수록 A 대비 B 변화가 큼 · 정상/위험 기준 아님</text>')
     parts.append('</svg></div>')
     return "".join(parts)
 
@@ -871,8 +872,8 @@ with tab_mole:
         r5.metric("MISS 변화", "-" if not np.isfinite(change_raw["miss_change_per_trial"]) else f'{change_raw["miss_change_per_trial"]:+.2f}회/trial')
 
         st.caption(
-            "두 조건 모두 현재 사용자의 실제 수행입니다. 레이더는 Round B에서 부담 증가 방향으로 변한 정도만 0–100으로 시각화합니다. "
-            "정상군 평균과의 비교가 아니며, 정상/위험 판정 또는 임상적 기준값으로 해석하지 않습니다."
+            "두 조건 모두 현재 사용자의 실제 수행입니다. 레이더는 지표별 시각화 상한(반응시간 30%, 정확도 10%p, 경로효율 15%p, 오선택 2회/trial, MISS 1회/trial)에 맞춰 상대 크기만 정규화합니다. "
+            "이 상한은 그래프 가독성을 위한 시각화 스케일이며 정상군 평균·정상/위험 판정·임상적 기준값이 아닙니다."
         )
         st.dataframe(radar_raw_table(a, b), use_container_width=True, hide_index=True)
 
