@@ -284,6 +284,14 @@ RADAR_DIMENSIONS = [
     ("miss_control", "MISS 억제"),
 ]
 
+CHANGE_RADAR_DIMENSIONS = [
+    ("rt_increase", "반응시간 증가"),
+    ("accuracy_drop", "정확도 감소"),
+    ("path_drop", "경로효율 감소"),
+    ("wrong_increase", "오선택 증가"),
+    ("miss_increase", "MISS 증가"),
+]
+
 
 def _score_pct(value):
     if not np.isfinite(_safe_float(value)):
@@ -316,21 +324,78 @@ def mole_performance_profile(stats):
     }
 
 
+def mole_change_profile(a, b):
+    """Within-session A→B change profile used only for visualization.
+
+    The radar shows change in the burden-increase direction. It is not a normal-control
+    comparison and does not use a diagnostic threshold. Scores use each metric's natural
+    range so that no unvalidated normative cut-off is introduced.
+    """
+    rt_a = _safe_float(a.get("median_rt_ms"))
+    rt_b = _safe_float(b.get("median_rt_ms"))
+    rt_change_pct = (
+        (rt_b - rt_a) / rt_a * 100.0
+        if np.isfinite(rt_a) and rt_a > 0 and np.isfinite(rt_b) else np.nan
+    )
+
+    acc_a = _safe_float(a.get("accuracy"))
+    acc_b = _safe_float(b.get("accuracy"))
+    accuracy_change_pp = (
+        (acc_b - acc_a) * 100.0
+        if np.isfinite(acc_a) and np.isfinite(acc_b) else np.nan
+    )
+
+    path_a = _safe_float(a.get("path_efficiency"))
+    path_b = _safe_float(b.get("path_efficiency"))
+    path_change_pp = (
+        (path_b - path_a) * 100.0
+        if np.isfinite(path_a) and np.isfinite(path_b) else np.nan
+    )
+
+    wrong_a = _safe_float(a.get("wrong_target_clicks"))
+    wrong_b = _safe_float(b.get("wrong_target_clicks"))
+    wrong_change = wrong_b - wrong_a if np.isfinite(wrong_a) and np.isfinite(wrong_b) else np.nan
+
+    miss_a = _safe_float(a.get("miss_clicks"))
+    miss_b = _safe_float(b.get("miss_clicks"))
+    miss_change = miss_b - miss_a if np.isfinite(miss_a) and np.isfinite(miss_b) else np.nan
+
+    raw = {
+        "rt_change_pct": rt_change_pct,
+        "accuracy_change_pp": accuracy_change_pp,
+        "path_change_pp": path_change_pp,
+        "wrong_change_per_trial": wrong_change,
+        "miss_change_per_trial": miss_change,
+    }
+
+    def positive(v):
+        return max(0.0, v) if np.isfinite(v) else np.nan
+
+    scores = {
+        "rt_increase": _score_pct(positive(rt_change_pct)),
+        "accuracy_drop": _score_pct(positive(-accuracy_change_pp)) if np.isfinite(accuracy_change_pp) else np.nan,
+        "path_drop": _score_pct(positive(-path_change_pp)) if np.isfinite(path_change_pp) else np.nan,
+        "wrong_increase": _score_pct(positive(wrong_change) / 15.0 * 100.0) if np.isfinite(wrong_change) else np.nan,
+        "miss_increase": _score_pct(positive(miss_change) / 15.0 * 100.0) if np.isfinite(miss_change) else np.nan,
+    }
+    return {"raw": raw, "scores": scores}
+
+
 def mole_radar_svg(a_stats, b_stats):
-    a_profile = mole_performance_profile(a_stats)
-    b_profile = mole_performance_profile(b_stats)
-    n = len(RADAR_DIMENSIONS)
+    change = mole_change_profile(a_stats, b_stats)
+    profile = change["scores"]
+    n = len(CHANGE_RADAR_DIMENSIONS)
     cx, cy, radius = 420.0, 245.0, 172.0
     angles = [-np.pi / 2 + (2 * np.pi * i / n) for i in range(n)]
 
-    def point(angle, value, extra=0.0):
+    def point(angle, value):
         scale = (value / 100.0) if np.isfinite(value) else 0.0
-        r = radius * scale + extra
+        r = radius * scale
         return cx + r * np.cos(angle), cy + r * np.sin(angle)
 
-    def polygon(profile, level=None):
+    def polygon(level=None):
         pts = []
-        for (key, _), angle in zip(RADAR_DIMENSIONS, angles):
+        for (key, _), angle in zip(CHANGE_RADAR_DIMENSIONS, angles):
             value = level if level is not None else _safe_float(profile.get(key), 0.0)
             x, y = point(angle, value)
             pts.append(f"{x:.1f},{y:.1f}")
@@ -338,34 +403,31 @@ def mole_radar_svg(a_stats, b_stats):
 
     parts = [
         '<div class="radar-card">',
-        '<div class="radar-legend"><span><i class="radar-dot radar-a"></i>내 기준선 · Round A × 10</span>'
-        '<span><i class="radar-dot radar-b"></i>내 전환 수행 · Round B × 10</span></div>',
-        '<svg viewBox="0 0 840 500" width="100%" role="img" aria-label="현재 사용자의 Round A 개인 기준선과 Round B 전환 수행 비교 레이더 차트" style="display:block;max-height:520px">',
+        '<div class="radar-legend"><span><i class="radar-dot radar-b"></i>A → B 행동 변화량</span></div>',
+        '<svg viewBox="0 0 840 500" width="100%" role="img" aria-label="Round A 순차 수행 대비 Round B 교대 수행의 행동 변화 레이더 차트" style="display:block;max-height:520px">',
     ]
 
     for level in (20, 40, 60, 80, 100):
         parts.append(
-            f'<polygon points="{polygon(a_profile, level=level)}" fill="none" stroke="#d9dee7" stroke-width="1"/>'
+            f'<polygon points="{polygon(level=level)}" fill="none" stroke="#d9dee7" stroke-width="1"/>'
         )
 
     for angle in angles:
         x, y = point(angle, 100)
         parts.append(f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{x:.1f}" y2="{y:.1f}" stroke="#d7dce5" stroke-width="1"/>')
 
-    parts.append(f'<polygon points="{polygon(a_profile)}" fill="#6f8fae" fill-opacity="0.22" stroke="#5d7893" stroke-width="3" stroke-linejoin="round"/>')
-    parts.append(f'<polygon points="{polygon(b_profile)}" fill="#8358d8" fill-opacity="0.24" stroke="#7043c7" stroke-width="3" stroke-linejoin="round"/>')
+    parts.append(f'<polygon points="{polygon()}" fill="#8358d8" fill-opacity="0.24" stroke="#7043c7" stroke-width="3" stroke-linejoin="round"/>')
 
-    for profile, color in ((a_profile, "#5d7893"), (b_profile, "#7043c7")):
-        for (key, _), angle in zip(RADAR_DIMENSIONS, angles):
-            value = _safe_float(profile.get(key))
-            if not np.isfinite(value):
-                continue
-            x, y = point(angle, value)
-            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.5" fill="#fff" stroke="{color}" stroke-width="3"/>')
+    for (key, _), angle in zip(CHANGE_RADAR_DIMENSIONS, angles):
+        value = _safe_float(profile.get(key))
+        if not np.isfinite(value):
+            continue
+        x, y = point(angle, value)
+        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.5" fill="#fff" stroke="#7043c7" stroke-width="3"/>')
 
-    for (key, label), angle in zip(RADAR_DIMENSIONS, angles):
-        lx = cx + (radius + 42) * np.cos(angle)
-        ly = cy + (radius + 42) * np.sin(angle)
+    for (key, label), angle in zip(CHANGE_RADAR_DIMENSIONS, angles):
+        lx = cx + (radius + 52) * np.cos(angle)
+        ly = cy + (radius + 52) * np.sin(angle)
         anchor = "middle"
         if lx < cx - 25:
             anchor = "end"
@@ -376,41 +438,31 @@ def mole_radar_svg(a_stats, b_stats):
             f'font-size="14" font-weight="800" fill="#44505c">{label}</text>'
         )
 
-    parts.append('<text x="420" y="472" text-anchor="middle" font-size="11" fill="#7b8490">시각화 점수 0–100 · 바깥쪽일수록 해당 수행 지표가 상대적으로 양호</text>')
+    parts.append('<text x="420" y="472" text-anchor="middle" font-size="11" fill="#7b8490">0 = 부담 증가 방향의 변화 없음 · 바깥쪽일수록 A 대비 B에서 변화가 큼 · 정상/위험 기준 아님</text>')
     parts.append('</svg></div>')
     return "".join(parts)
 
 
 def radar_raw_table(a, b):
-    rows = [
-        ("평균 정답 수 / trial", _safe_float(a.get("correct_hits")), _safe_float(b.get("correct_hits")), "count"),
-        ("선택 정확도", _safe_float(a.get("accuracy")), _safe_float(b.get("accuracy")), "pct"),
-        ("중앙 반응시간", _safe_float(a.get("median_rt_ms")), _safe_float(b.get("median_rt_ms")), "ms"),
-        ("반응시간 표준편차", _safe_float(a.get("std_rt_ms")), _safe_float(b.get("std_rt_ms")), "ms"),
-        ("평균 수행시간", _safe_float(a.get("duration_ms")), _safe_float(b.get("duration_ms")), "sec"),
-        ("경로 효율", _safe_float(a.get("path_efficiency")), _safe_float(b.get("path_efficiency")), "pct"),
-        ("평균 오선택 / trial", _safe_float(a.get("wrong_target_clicks")), _safe_float(b.get("wrong_target_clicks")), "count"),
-        ("평균 MISS / trial", _safe_float(a.get("miss_clicks")), _safe_float(b.get("miss_clicks")), "count"),
-    ]
+    raw = mole_change_profile(a, b)["raw"]
 
     def fmt(v, kind):
-        if not np.isfinite(v):
+        if not np.isfinite(_safe_float(v)):
             return "-"
         if kind == "pct":
-            return f"{v*100:.1f}%"
-        if kind == "ms":
-            return f"{v:.1f} ms"
-        if kind == "sec":
-            return f"{v/1000:.2f} s"
-        return f"{v:.1f}"
+            return f"{v:+.1f}%"
+        if kind == "pp":
+            return f"{v:+.1f}%p"
+        if kind == "count":
+            return f"{v:+.2f}회/trial"
+        return f"{v:+.2f}"
 
     return pd.DataFrame([
-        {
-            "지표": label,
-            "내 기준선 · Round A × 10": fmt(av, kind),
-            "내 전환 수행 · Round B × 10": fmt(bv, kind),
-        }
-        for label, av, bv, kind in rows
+        {"지표": "반응시간", "B−A 실제 변화": fmt(raw["rt_change_pct"], "pct"), "레이더 방향": "증가 시 바깥쪽"},
+        {"지표": "정확도", "B−A 실제 변화": fmt(raw["accuracy_change_pp"], "pp"), "레이더 방향": "감소 시 바깥쪽"},
+        {"지표": "경로 효율", "B−A 실제 변화": fmt(raw["path_change_pp"], "pp"), "레이더 방향": "감소 시 바깥쪽"},
+        {"지표": "오선택", "B−A 실제 변화": fmt(raw["wrong_change_per_trial"], "count"), "레이더 방향": "증가 시 바깥쪽"},
+        {"지표": "MISS", "B−A 실제 변화": fmt(raw["miss_change_per_trial"], "count"), "레이더 방향": "증가 시 바깥쪽"},
     ])
 
 
@@ -805,17 +857,27 @@ with tab_mole:
             unsafe_allow_html=True,
         )
 
-        st.markdown("#### 내 기준선 vs 전환 수행 · Radar Profile")
+        st.markdown("#### 인지 전환 행동 변화 프로필 · B−A")
+        st.caption("Round A(순차 수행) 대비 Round B(교대 수행)에서 행동이 얼마나 변했는지를 한 개의 변화 프로필로 표시합니다.")
         st.markdown(mole_radar_svg(a, b), unsafe_allow_html=True)
+
+        change_profile = mole_change_profile(a, b)
+        change_raw = change_profile["raw"]
+        r1, r2, r3, r4, r5 = st.columns(5)
+        r1.metric("반응시간 변화", "-" if not np.isfinite(change_raw["rt_change_pct"]) else f'{change_raw["rt_change_pct"]:+.1f}%')
+        r2.metric("정확도 변화", "-" if not np.isfinite(change_raw["accuracy_change_pp"]) else f'{change_raw["accuracy_change_pp"]:+.1f}%p')
+        r3.metric("경로효율 변화", "-" if not np.isfinite(change_raw["path_change_pp"]) else f'{change_raw["path_change_pp"]:+.1f}%p')
+        r4.metric("오선택 변화", "-" if not np.isfinite(change_raw["wrong_change_per_trial"]) else f'{change_raw["wrong_change_per_trial"]:+.2f}회/trial')
+        r5.metric("MISS 변화", "-" if not np.isfinite(change_raw["miss_change_per_trial"]) else f'{change_raw["miss_change_per_trial"]:+.2f}회/trial')
+
         st.caption(
-            "두 선 모두 현재 사용자의 실제 수행 결과입니다. "
-            "Round A 10-trial 평균을 개인 기준선으로 두고, 인지 전환 부담이 추가된 Round B 10-trial 평균과 비교합니다. "
-            "집단 평균·정상군 평균은 아닙니다."
+            "두 조건 모두 현재 사용자의 실제 수행입니다. 레이더는 Round B에서 부담 증가 방향으로 변한 정도만 0–100으로 시각화합니다. "
+            "정상군 평균과의 비교가 아니며, 정상/위험 판정 또는 임상적 기준값으로 해석하지 않습니다."
         )
         st.dataframe(radar_raw_table(a, b), use_container_width=True, hide_index=True)
 
         screening_result = mci_signal_screening(a, b)
-        st.markdown("### MCI 위험 신호 예측 결과")
+        st.markdown("### MCI 관련 행동 신호 참고 결과 · 프로토타입")
         st.markdown(mci_result_html(screening_result), unsafe_allow_html=True)
         if research_model_proxy.get("available"):
             proxy_pct = research_model_proxy["score"] * 100.0
@@ -827,7 +889,7 @@ with tab_mole:
             )
         else:
             st.markdown('<div class="mci-prototype">※ 논문 재현 SVM 탐색적 연계 점수는 이번 세션에서 산출되지 않았습니다.</div>', unsafe_allow_html=True)
-        st.markdown('<div class="mci-prototype">※ 서비스 선별 결과는 뇌굴뇌굴 내부 A/B 수행 차이에 기반한 프로토타입 규칙이며, MCI 진단 또는 의료적 확진 결과가 아닙니다.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="mci-prototype">※ 서비스 선별 결과는 뇌굴뇌굴 내부 A/B 수행 차이에 기반한 프로토타입 규칙이며, 정상군 비교·MCI 진단 또는 의료적 확진 결과가 아닙니다.</div>', unsafe_allow_html=True)
         st.markdown("#### 결과 단계 및 후속 안내")
         st.dataframe(mci_level_table(), use_container_width=True, hide_index=True)
 
@@ -874,7 +936,7 @@ with tab_mole:
             else:
                 st.info("클릭 이벤트가 없습니다.")
 
-        st.markdown('<div class="notice"><b>해석 범위</b><br>본 리포트는 20-trial 뇌굴뇌굴 행동 특성과 원 논문 재현 SVM의 탐색적 proxy 연계를 함께 보여줍니다. 서비스 선별 결과와 SVM 참고점수 모두 의료 진단이나 MCI/치매 확진·임상 확률이 아니며, 뇌굴뇌굴 자체 임상 검증을 위해서는 별도 표본으로 재학습·검증이 필요합니다.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="notice"><b>해석 범위</b><br>본 리포트의 레이더는 동일 사용자의 Round A→B 행동 변화만 시각화하며 정상군 규준 비교가 아닙니다. 원 논문 재현 SVM의 탐색적 proxy는 별도로 제시합니다. 서비스 선별 결과와 SVM 참고점수 모두 의료 진단이나 MCI/치매 확진·임상 확률이 아니며, 뇌굴뇌굴 자체 임상 검증을 위해서는 동일 게임 프로토콜로 정상군·임상군 데이터를 별도 수집해 재학습·검증해야 합니다.</div>', unsafe_allow_html=True)
 
         payload = {
             "session_id": mole_pack.get("session_id"),
@@ -883,9 +945,10 @@ with tab_mole:
             "round_A_10trial_mean_features": a,
             "round_B_10trial_mean_features": b,
             "radar_profile": {
-                "reference_type": "within-session personal baseline (Round A 10-trial mean)",
-                "round_A_scores": mole_performance_profile(a),
-                "round_B_scores": mole_performance_profile(b),
+                "type": "within-session B-A behavioral change profile",
+                "comparison": "Round A sequential vs Round B alternating",
+                "normal_reference": False,
+                "change_profile": change_profile,
             },
             "mci_risk_signal_screening": screening_result,
             "mole_research_model_proxy": research_model_proxy,
