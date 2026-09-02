@@ -338,9 +338,9 @@ def mole_radar_svg(a_stats, b_stats):
 
     parts = [
         '<div class="radar-card">',
-        '<div class="radar-legend"><span><i class="radar-dot radar-a"></i>기준 평균 · Round A × 10</span>'
-        '<span><i class="radar-dot radar-b"></i>내 결과 · Round B × 10</span></div>',
-        '<svg viewBox="0 0 840 500" width="100%" role="img" aria-label="Round A 평균과 Round B 수행 비교 레이더 차트" style="display:block;max-height:520px">',
+        '<div class="radar-legend"><span><i class="radar-dot radar-a"></i>내 기준선 · Round A × 10</span>'
+        '<span><i class="radar-dot radar-b"></i>내 전환 수행 · Round B × 10</span></div>',
+        '<svg viewBox="0 0 840 500" width="100%" role="img" aria-label="현재 사용자의 Round A 개인 기준선과 Round B 전환 수행 비교 레이더 차트" style="display:block;max-height:520px">',
     ]
 
     for level in (20, 40, 60, 80, 100):
@@ -407,8 +407,8 @@ def radar_raw_table(a, b):
     return pd.DataFrame([
         {
             "지표": label,
-            "기준 평균 · Round A × 10": fmt(av, kind),
-            "내 결과 · Round B × 10": fmt(bv, kind),
+            "내 기준선 · Round A × 10": fmt(av, kind),
+            "내 전환 수행 · Round B × 10": fmt(bv, kind),
         }
         for label, av, bv, kind in rows
     ])
@@ -805,11 +805,12 @@ with tab_mole:
             unsafe_allow_html=True,
         )
 
-        st.markdown("#### 기준 평균 vs 내 전환 수행 · Radar Profile")
+        st.markdown("#### 내 기준선 vs 전환 수행 · Radar Profile")
         st.markdown(mole_radar_svg(a, b), unsafe_allow_html=True)
         st.caption(
-            "현재 '기준 평균'은 집단 평균이 아니라 동일 사용자의 Round A 10-trial 평균입니다. "
-            "Round B 10-trial 실제 수행을 다른 색으로 겹쳐 비교합니다. 집단 기준 데이터가 확보되면 동일 구조에 normative average를 대체 적용할 수 있습니다."
+            "두 선 모두 현재 사용자의 실제 수행 결과입니다. "
+            "Round A 10-trial 평균을 개인 기준선으로 두고, 인지 전환 부담이 추가된 Round B 10-trial 평균과 비교합니다. "
+            "집단 평균·정상군 평균은 아닙니다."
         )
         st.dataframe(radar_raw_table(a, b), use_container_width=True, hide_index=True)
 
@@ -882,7 +883,7 @@ with tab_mole:
             "round_A_10trial_mean_features": a,
             "round_B_10trial_mean_features": b,
             "radar_profile": {
-                "reference_type": "within-session Round A 10-trial mean",
+                "reference_type": "within-session personal baseline (Round A 10-trial mean)",
                 "round_A_scores": mole_performance_profile(a),
                 "round_B_scores": mole_performance_profile(b),
             },
