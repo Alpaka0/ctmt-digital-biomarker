@@ -868,8 +868,9 @@ with tab_mole:
         r1.metric("반응시간 변화", "-" if not np.isfinite(change_raw["rt_change_pct"]) else f'{change_raw["rt_change_pct"]:+.1f}%')
         r2.metric("정확도 변화", "-" if not np.isfinite(change_raw["accuracy_change_pp"]) else f'{change_raw["accuracy_change_pp"]:+.1f}%p')
         r3.metric("경로효율 변화", "-" if not np.isfinite(change_raw["path_change_pp"]) else f'{change_raw["path_change_pp"]:+.1f}%p')
-        r4.metric("오선택 변화", "-" if not np.isfinite(change_raw["wrong_change_per_trial"]) else f'{change_raw["wrong_change_per_trial"]:+.2f}회/trial')
-        r5.metric("MISS 변화", "-" if not np.isfinite(change_raw["miss_change_per_trial"]) else f'{change_raw["miss_change_per_trial"]:+.2f}회/trial')
+        r4.metric("오선택 변화", "-" if not np.isfinite(change_raw["wrong_change_per_trial"]) else f'{change_raw["wrong_change_per_trial"]:+.2f}회')
+        r5.metric("MISS 변화", "-" if not np.isfinite(change_raw["miss_change_per_trial"]) else f'{change_raw["miss_change_per_trial"]:+.2f}회')
+        st.caption("※ 오선택·MISS 변화량은 trial당 평균 발생 횟수 차이입니다.")
 
         st.caption(
             "두 조건 모두 현재 사용자의 실제 수행입니다. 레이더는 지표별 시각화 상한(반응시간 30%, 정확도 10%p, 경로효율 15%p, 오선택 2회/trial, MISS 1회/trial)에 맞춰 상대 크기만 정규화합니다. "
